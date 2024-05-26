@@ -29,16 +29,18 @@ def getChoked(p_tank, p_He):
 # Define inputs
 in_to_m = (1/39.37); # [in/m] The conversion factor between in and m.
 psi_to_pascal = 6894.76 # [Pa/psi]
+sec_to_millisec = 10 ** -3
 tank_diameter = 6.625; # [in] The outer diameter of the tanks.
 p_He = 5500 # [psi] Helium pressure in COPV initially
 p_tank = 40 # [psi] Gas pressure in tank ullage volume initially
-t_He = 295 # [K] Helium temperature
-t_tank = 117 # [K] Tank temperature
-cycle_time = 125 # [millisec] Bang-bang valve cycle time
+t_He = 300 # [K] Helium temperature
+t_tank = 300 # [K] Tank temperature
+cycle_time = 250 # [millisec] Bang-bang valve cycle time
 sol_Cd = 0.6 # [unitless] Solenoid discharge coefficient
 sol_ESEOD = 0.058 # [in] Solenoid equivalent sharp edge orifice diameter
 vol_He = 0.009 # [m^3] Helium COPV volume
-vol_tank = 0.004 # [m^3] Tank ullage volume
+vol_tank = 0.0015 # [m^3] Tank ullage volume
+num_valves = 2 # [unitless] Number of valves flowing
 
 ###########################################################################
 # Convert to metric units
@@ -67,11 +69,11 @@ for time in range(0, cycle_time):
     m_He = rho_He * vol_He # [kg] Mass of helium in tank ullage
     m_tank = rho_tank * vol_tank # [kg] Mass of helium in tank ullage
 
-    mDot = sol_Cd * sol_area * np.sqrt(rho_He * k_ratio_He * p_He * (2 / (k_ratio_He + 1)) ** ((k_ratio_He + 1)/(k_ratio_He - 1)))
+    mDot = num_valves * sol_Cd * sol_area * np.sqrt(rho_He * k_ratio_He * p_He * (2 / (k_ratio_He + 1)) ** ((k_ratio_He + 1)/(k_ratio_He - 1)))
     # [kg/sec] Choked mass flow of helium from COPV to tank ullage volume
 
     # Update Masses
-    mDot *= 10 ** -3 # [kg/ms]
+    mDot *= sec_to_millisec # [kg/ms]
     m_He -= mDot # [kg]
     m_tank += mDot # [kg]
 
@@ -79,21 +81,28 @@ for time in range(0, cycle_time):
     rho_He = m_He / vol_He # [kg/m^3]
     p_He = cp.PropsSI('P', 'D', rho_He, 'H', h_He, 'helium') # [Pa] Helium pressure
     t_He = cp.PropsSI('T', 'D', rho_He, 'H', h_He, 'helium') # [K] Helium temperature
-    rho_tank = m_He / vol_tank # [kg/m^3]
+    rho_tank = m_tank / vol_tank # [kg/m^3]
     p_tank = cp.PropsSI('P', 'D', rho_tank, 'H', h_tank, 'helium') # [Pa] Tank pressure
     t_tank = cp.PropsSI('T', 'D', rho_tank, 'H', h_tank, 'helium') # [K] Tank temperature
 
     tankPressures.append(p_tank / psi_to_pascal)
     HePressures.append(p_He / psi_to_pascal)
-    mDots.append(mDot)
+    mDots.append(mDot / sec_to_millisec)
 
     time += 1
 
 ###########################################################################
 # Return outputs
 print(p_tank / psi_to_pascal)
-plt.plot(times, tankPressures)
-plt.plot(times, HePressures)
 plt.figure()
-plt.plot(times, mDots)
+plt.plot(times, tankPressures, 'r-')
+plt.title("Tank Pressure over Time")
+plt.xlabel("Time (Milliseconds)")
+plt.ylabel("Tank Pressure (psi)")
+#plt.plot(times, HePressures)
+plt.figure()
+plt.plot(times, mDots, 'b-')
+plt.title("Mass Flow Rate over Time")
+plt.xlabel("Time (Milliseconds)")
+plt.ylabel("Mass Flow Rate (kg/s)")
 plt.show()
