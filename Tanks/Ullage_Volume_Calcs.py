@@ -1,0 +1,99 @@
+from CoolProp import CoolProp as cp
+import numpy as np
+import matplotlib.pyplot as plt
+
+###########################################################################
+# Ullage Volume Calcs (Test Stand Tanks)
+#
+# Author: Max Van de Graaff
+# Contact me on Slack @ Max Van de Graaff
+#
+# Description: This code calculates required ullage volume based on 
+# anticipated bang-bang pressure spike
+#
+# Notes: You will need the Python CoolProp library to run this script.
+#
+###########################################################################
+
+###########################################################################
+# Function Definitions
+def getChoked(p_tank, p_He):
+    press_ratio = p_He / p_tank # [unitless ratio]
+    if press_ratio > 1.9:
+        choked = 1 # [binary]
+    else:
+        choked = 0 # [binary]
+    return(choked)
+
+###########################################################################
+# Define inputs
+in_to_m = (1/39.37); # [in/m] The conversion factor between in and m.
+psi_to_pascal = 6894.76 # [Pa/psi]
+tank_diameter = 6.625; # [in] The outer diameter of the tanks.
+p_He = 5500 # [psi] Helium pressure in COPV initially
+p_tank = 40 # [psi] Gas pressure in tank ullage volume initially
+t_He = 295 # [K] Helium temperature
+t_tank = 117 # [K] Tank temperature
+cycle_time = 125 # [millisec] Bang-bang valve cycle time
+sol_Cd = 0.6 # [unitless] Solenoid discharge coefficient
+sol_ESEOD = 0.058 # [in] Solenoid equivalent sharp edge orifice diameter
+vol_He = 0.009 # [m^3] Helium COPV volume
+vol_tank = 0.004 # [m^3] Tank ullage volume
+
+###########################################################################
+# Convert to metric units
+tank_diameter *= in_to_m; # [m]
+p_He *= psi_to_pascal # [Pa]
+p_tank *= psi_to_pascal # [Pa]
+sol_ESEOD *= in_to_m
+
+###########################################################################
+# Setup calcs
+times = range(0, cycle_time)
+tankPressures = []
+HePressures = []
+mDots = []
+sol_area = np.pi * (sol_ESEOD / 2) ** 2 # [m^2] Equivalent valve orifice area
+h_He = cp.PropsSI('H', 'P', p_He, 'T', t_He, 'helium') # [J/kg] Helium specific enthalpy
+h_tank = cp.PropsSI('H', 'P', p_tank, 'T', t_tank, 'helium') # [J/kg] Tank specific enthalpy
+
+for time in range(0, cycle_time):
+    # choked = getChoked(p_tank, p_He)
+    rho_He = cp.PropsSI('D', 'H', h_He, 'P', p_He, 'helium') # [kg/m^3] Helium density
+    rho_tank = cp.PropsSI('D', 'H', h_tank, 'P', p_tank, 'helium') # [kg/m^3] Helium density
+    Cp_He = cp.PropsSI('C', 'H', h_He, 'P', p_He, 'helium') # [kJ/kgK] Specific heat capacity for helium at contant pressure
+    Cv_He = cp.PropsSI('O', 'H', h_He, 'P', p_He, 'helium') # [kJ/kgK] Specific heat capacity for helium at contant volume
+    k_ratio_He = Cp_He / Cv_He # [unitless] Heat capacity ratio 
+    m_He = rho_He * vol_He # [kg] Mass of helium in tank ullage
+    m_tank = rho_tank * vol_tank # [kg] Mass of helium in tank ullage
+
+    mDot = sol_Cd * sol_area * np.sqrt(rho_He * k_ratio_He * p_He * (2 / (k_ratio_He + 1)) ** ((k_ratio_He + 1)/(k_ratio_He - 1)))
+    # [kg/sec] Choked mass flow of helium from COPV to tank ullage volume
+
+    # Update Masses
+    mDot *= 10 ** -3 # [kg/ms]
+    m_He -= mDot # [kg]
+    m_tank += mDot # [kg]
+
+    # Update Density, Temp, Press
+    rho_He = m_He / vol_He # [kg/m^3]
+    p_He = cp.PropsSI('P', 'D', rho_He, 'H', h_He, 'helium') # [Pa] Helium pressure
+    t_He = cp.PropsSI('T', 'D', rho_He, 'H', h_He, 'helium') # [K] Helium temperature
+    rho_tank = m_He / vol_tank # [kg/m^3]
+    p_tank = cp.PropsSI('P', 'D', rho_tank, 'H', h_tank, 'helium') # [Pa] Tank pressure
+    t_tank = cp.PropsSI('T', 'D', rho_tank, 'H', h_tank, 'helium') # [K] Tank temperature
+
+    tankPressures.append(p_tank / psi_to_pascal)
+    HePressures.append(p_He / psi_to_pascal)
+    mDots.append(mDot)
+
+    time += 1
+
+###########################################################################
+# Return outputs
+print(p_tank / psi_to_pascal)
+plt.plot(times, tankPressures)
+plt.plot(times, HePressures)
+plt.figure()
+plt.plot(times, mDots)
+plt.show()
