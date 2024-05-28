@@ -1,7 +1,7 @@
 from math import *
 print()
 
-V_tank = pow(pi*72*(7.625/2),2)  # in^3 | ID = 7.625"
+V_tank = pi*72*(7.625/2)**2  # in^3 | ID = 7.625"
 P_tank = 1500  # psi
 P_bottle = 6000 # psi
 V_bottle = 43.3 * 61.024 * (1 - 1500/6000) # L -> in^3
@@ -15,7 +15,7 @@ T_amb = 293 # K
 V_1_isothermal = (P_tank*V_tank / P_bottle)
 
 # Isentropic
-V_1_isentropic = pow(V_tank*(P_tank / P_bottle),(1/gamma_N2))
+V_1_isentropic = V_tank*(P_tank / P_bottle)**(1/gamma_N2)
 
 # Lox Temp
 V_1_loxtemp = ((P_tank*V_tank*T_amb)/(T_lox)) / P_bottle
