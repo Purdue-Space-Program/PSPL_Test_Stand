@@ -1,8 +1,8 @@
 from math import *
 print()
 
-V_tank = pi*72*(7.625/2)**2  # in^3 | ID = 7.625"
-P_tank = 1500  # psi
+V_tank = pi*72*(5.761/2)**2  # in^3 | ID = 7.625"
+P_tank = 1400  # psi
 P_bottle = 6000 # psi
 V_bottle = 43.3 * 61.024 * (1 - 1500/6000) # L -> in^3
 
