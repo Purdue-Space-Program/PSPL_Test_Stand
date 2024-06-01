@@ -11,7 +11,15 @@ import matplotlib.pyplot as plt
 # Description: This code calculates required ullage volume based on 
 # anticipated bang-bang pressure spike
 #
-# Notes: You will need the Python CoolProp library to run this script.
+# Notes: You will need the Python CoolProp, NumPy, and MatPlotLib libraries 
+# to run this script.
+#
+# Key Assumptions:
+# - Assume tank ullage volume contains only gaseous helium at start, not 
+#   evaporated propellants
+# - Assume isenthalpic conditions (same specific enthalpy) within the tank
+#   and COPV relative to starting enthalphy values for each
+# - Assume choked flow (not a valid assumption for lower COPV pressures)
 #
 ###########################################################################
 
@@ -32,14 +40,14 @@ psi_to_pascal = 6894.76 # [Pa/psi]
 sec_to_millisec = 10 ** -3
 tank_diameter = 6.625; # [in] The outer diameter of the tanks.
 p_He = 5500 # [psi] Helium pressure in COPV initially
-p_tank = 40 # [psi] Gas pressure in tank ullage volume initially
+p_tank = 1650 # [psi] Gas pressure in tank ullage volume initially
 t_He = 300 # [K] Helium temperature
-t_tank = 300 # [K] Tank temperature
-cycle_time = 250 # [millisec] Bang-bang valve cycle time
+t_tank = 117 # [K] Tank temperature
+cycle_time = 125 # [millisec] Bang-bang valve cycle time
 sol_Cd = 0.6 # [unitless] Solenoid discharge coefficient
 sol_ESEOD = 0.058 # [in] Solenoid equivalent sharp edge orifice diameter
 vol_He = 0.009 # [m^3] Helium COPV volume
-vol_tank = 0.0015 # [m^3] Tank ullage volume
+vol_tank = 0.0045 # [m^3] Tank ullage volume
 num_valves = 2 # [unitless] Number of valves flowing
 
 ###########################################################################
@@ -51,6 +59,7 @@ sol_ESEOD *= in_to_m
 
 ###########################################################################
 # Setup calcs
+p_tank_init = p_tank # [Pa]
 times = range(0, cycle_time)
 tankPressures = []
 HePressures = []
@@ -93,14 +102,18 @@ for time in range(0, cycle_time):
 
 ###########################################################################
 # Return outputs
-print(p_tank / psi_to_pascal)
-plt.figure()
+print("##########################################################################")
+print("Final tank pressure after one cycle (psi): ", round((p_tank / psi_to_pascal), 2))
+print("Net tank pressure increase (psi): ", round(((p_tank - p_tank_init) / psi_to_pascal), 2))
+print("##########################################################################")
+
+plt.figure() # Tank Pressure Plot
 plt.plot(times, tankPressures, 'r-')
 plt.title("Tank Pressure over Time")
 plt.xlabel("Time (Milliseconds)")
 plt.ylabel("Tank Pressure (psi)")
-#plt.plot(times, HePressures)
-plt.figure()
+
+plt.figure() # Mass Flow Plot
 plt.plot(times, mDots, 'b-')
 plt.title("Mass Flow Rate over Time")
 plt.xlabel("Time (Milliseconds)")
