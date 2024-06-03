@@ -50,8 +50,11 @@ throat_dia_fu = 2 * np.sqrt(throat_area_fu / np.pi)
 throat_area_fu.ito('in^2')
 throat_dia_fu.ito('in')
 
-print("Area:",throat_area_lox, throat_area_fu,3)
-print("Dia:", throat_dia_lox, throat_dia_fu)
+print("SCFM (lox, fu):", f"{scfm_gn2_lox: ~P.4f},  " f"{scfm_gn2_fu: ~P.4f}")
+print("Area (lox, fu):", f"{throat_area_lox: ~P.4f},        ", f"{throat_area_fu: ~P.4f}")
+print("Dia (lox, fu): ", f"{throat_dia_lox: ~P.4f},         ", f"{throat_dia_fu: ~P.4f}")
 
-print("One 3/8 line:", np.pi*((0.378-0.049*2)/2)**2)
-print("One 1/4 line:", np.pi*((0.25-0.049*2)/2)**2)
+'''
+print("Area, one 3/8 line:", f"{np.pi*((0.378-0.049*2)/2)**2 * u('in^2'): ~P.4f}")
+print("Area, one 1/4 line:", f"{np.pi*((0.25-0.049*2)/2)**2 * u('in^2'): ~P.4f}")
+'''
