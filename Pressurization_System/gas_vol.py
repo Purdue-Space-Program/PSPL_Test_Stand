@@ -1,0 +1,49 @@
+from math import *
+from press_master import *
+
+print()
+
+V_tank = pi*72*(5.761/2)**2  # in^3 | ID = 7.625"
+P_tank = 1400  # psi
+P_bottle = 6000 # psi
+V_bottle = 43.3 * 61.024 * (1 - 1500/6000) # L -> in^3
+P_GN2_MIN = 1400 * u('psi')
+P_GN2_MAX = 6000 * u('psi')
+T_GN2_BOTTLE = Q_(40, 'degF').to('kelvin')
+
+gamma_N2 = 1.40
+
+T_lox = 90.15 # K
+T_amb = 293 # K
+
+# Constant Temp
+V_1_isothermal = (P_tank*V_tank / P_bottle)
+
+# Isentropic
+V_1_isentropic = V_tank*(P_tank / P_bottle)**(1/gamma_N2)
+
+# Lox Temp
+V_1_loxtemp = ((P_tank*V_tank*T_amb)/(T_lox)) / P_bottle
+
+num_isothermal = V_1_isothermal / V_bottle
+num_isentropic = V_1_isentropic / V_bottle
+num_loxtemp = V_1_loxtemp / V_bottle
+
+print("Initial V required: ")
+print("Isothermal: ", V_1_isothermal / 61.024, " L")
+print("Isentropic: ", V_1_isentropic / 61.024, " L")
+print("At LOX temp: ", V_1_loxtemp / 61.024, " L")
+print("# bottles (Isothermal, isentropic, LOX temp): ", num_isothermal, " ", num_isentropic, " ", num_loxtemp)
+
+# ACFM = SCFM x (PStandard/PActual) x (TActual/TStandard)
+# For 1400 psi minimum flow condition
+max_bottle_acfm = scfm_gn2_lox * (P_STD / (P_GN2_MIN)) * (T_GN2_BOTTLE / T_STD)
+max_bottle_acfm.ito('ft^3/min')
+print("Min bottle acfm: ", f"{max_bottle_acfm: ~P.4f}")
+
+# For 6000 psi maximum flow condition
+min_bottle_acfm = scfm_gn2_lox * (P_STD / (P_GN2_MAX)) * (T_GN2_BOTTLE / T_STD)
+min_bottle_acfm.ito('ft^3/min')
+print("Max bottle acfm: ", f"{min_bottle_acfm: ~P.4f}")
+
+
