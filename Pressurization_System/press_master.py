@@ -109,7 +109,6 @@ def c_v(scfm, P, gas):
     C_v = (scfm.to('ft^3/min').m * 2 * np.sqrt(S_g.m)) / P.to('psi').m  # Note:units in psia and SCFM
     return C_v
 
-
 def copv_init_press(P_tank, V_tank, V_copv, gas):
     '''
     Calculates the initial pressure required to pressurize tanks to a given pressure throughout the burn cycle while keeping flow choked.
@@ -163,7 +162,7 @@ def T_isent_exp(T1, P1, P2, gas):
     R, gamma, S_g, choke = get_constants(gas)
 
     return (T1 * (P2 / P1)**(1 - 1 / gamma)).to('kelvin')
-    
+
 # Graphical Functions
 def plot_copv():
     copv_pressures = []
@@ -171,81 +170,120 @@ def plot_copv():
 
     for i in range(1, 1400):
         P_tank = i * u('psi')
-        copv_pressures.append(copv_init_press(P_tank, V_TANK, V_COPV, 'N2').to('psi').m)
+        press = copv_init_press(P_tank, V_TANK, V_COPV, 'N2').to('psi').m
+        copv_pressures.append(press)
+        if press <= PMAX_COPV.to('psi').m:
+            max_press = P_tank
 
     plt.figure(1)
-    plt.plot(tank_pressures, copv_pressures)
-    plt.axhline(y = PMAX_COPV.to('psi').m, color = 'r', linestyle = '--')
+    plt.plot(tank_pressures, copv_pressures, label = 'Initial COPV Pressure')
+    plt.axhline(y = PMAX_COPV.to('psi').m, color = 'r', linestyle = '--', label = 'COPV MEOP')
     plt.xlabel('Tank Pressure (psia)')
     plt.ylabel('COPV Starting Pressure (psia)')
     plt.title('Initial COPV pressure as a function of tank pressure')
+    plt.legend()
 
+    plt.plot(max_press, PMAX_COPV, color = 'yellow')
+    print(max_press)
+    #plt.annotate(f"({max_press.to('psi'): ~P.2f}, {PMAX_COPV.to('psi'): ~P.2f})", (max_press, PMAX_COPV))
     plt.show()
 
+def run_test(P_tank, P_bottle, V_bottle, gas_type):
+    '''
+    Inputs: P_tank, P_bottle, V_bottle, gas_type
+
+    Outputs: m_dot, SCFM, Area, Diameter, C_v
+    '''
+    
+    # Oxidizer
+    OX = 'Oxygen'
+    MDOT_LOX = 8 * u('kg/s')  # LOX mass flow out of tank
+
+    # Fuel
+    FU = 'Methane'
+    MDOT_FU = 3 * u('kg/s')  # Methane mass flow out of tank 
+
+    # Press Gas
+    GAS_TYPE = gas_type
+
+    # Bottle Test Case
+    # Change These
+    P_TANK = P_tank  # Prop tank pressure
+    P_bottle = P_bottle
+    V_bottle = V_bottle
+
+    # Leave these
+    T_COPV = T_STD
+    T_TANK = T_isent_exp(T_STD, P_bottle, P_TANK, GAS_TYPE)
+    P_FILL = 40 * u('psi')  # Propellant fill pressure, used for density
 
 
-# ------- TEST CASE -------
-'''
-Change these inputs to run the model with different test cases. Currently only compatible with Methalox N2 press.
-'''
+    # ------- MAIN RUN - DON'T CHANGE VARS -------
 
-# Oxidizer
-OX = 'Oxygen'
-MDOT_LOX = 8 * u('kg/s')  # LOX mass flow out of tank
+    # Liquid Oxygen
+    vdot_lox = prop_vol_flow(OX, MDOT_LOX, P_FILL)
+    scfm_lox = scfm(vdot_lox, P_TANK, T_TANK)
+    mdot_gas_lox = m_dot(vdot_lox, P_TANK, T_TANK, GAS_TYPE)
+    throat_area_lox, throat_dia_lox = throat_calcs(mdot_gas_lox, P_bottle, T_COPV, GAS_TYPE)
+    Cv_lox = c_v(scfm_lox, P_bottle, GAS_TYPE)
 
-# Fuel
-FU = 'Methane'
-MDOT_FU = 3 * u('kg/s')  # Methane mass flow out of tank 
+    # Fuel
+    vdot_fu = prop_vol_flow(FU, MDOT_FU, P_FILL)
+    scfm_fu = scfm(vdot_fu, P_TANK, T_TANK)
+    mdot_gas_fu = m_dot(vdot_fu, P_TANK, T_TANK, GAS_TYPE)
+    throat_area_fu, throat_dia_fu = throat_calcs(mdot_gas_fu, P_bottle, T_COPV, GAS_TYPE)
+    Cv_fu = c_v(scfm_fu, P_bottle, GAS_TYPE)
 
-# Press Gas
-GAS_TYPE = 'N2'
+    print(f"Simulation of pressurization of {FU} and {OX} test with two {V_TANK.to('L'): ~P.2f} tanks from {V_bottle.to('L'): ~P.2f} COPV.")
+    print(f"Maintaining tank pressure of {P_TANK.to('psi'): ~P.2f} from {P_bottle.to('psi'): ~P.2f} initial COPV pressurization.")
+    print("Isentropic temp:", f"{T_TANK.to('kelvin'): ~P.2f}")
+    print("Mass Flow Rates (lox, fu): ", f"{MDOT_LOX.to('kg/s'): ~P.2f}, {MDOT_FU.to('kg/s'): ~P.2f}")
+    print("Tank pressure and press gas temp: ", f"{P_TANK.to('psi'): ~P.2f}, {T_TANK.to('kelvin'): ~P.2f}")
+    print("COPV pressure and press gas temp: ", f"{P_bottle.to('psi'): ~P.2f}, {T_COPV.to('kelvin'): ~P.2f}")
+    print()
+    print("m_dot (lox, fu):", f"{mdot_gas_lox.to('kg/s'): ~P.4f},       " f"{mdot_gas_fu.to('kg/s'): ~P.4f}")
+    print("SCFM (lox, fu): ", f"{scfm_lox: ~P.4f},  " f"{scfm_fu: ~P.4f}")
+    print("Area (lox, fu): ", f"{throat_area_lox: ~P.4f},        ", f"{throat_area_fu: ~P.4f}")
+    print("Dia (lox, fu):  ", f"{throat_dia_lox: ~P.4f},         ", f"{throat_dia_fu: ~P.4f}")
+    print("C_v (lox, fu):  ", f"{Cv_lox: <.4f},            ", f"{Cv_fu: <.4f}")
 
-'''
-# COPV Test Case
-P_TANK = 980 * u('psi')  # Prop tank pressure
-P_COPV = copv_init_press(P_TANK, V_TANK, V_COPV, GAS_TYPE)
-T_COPV = T_STD
-T_TANK = T_isent_exp(T_STD, P_COPV, P_TANK, GAS_TYPE)
-P_FILL = 40 * u('psi')  # Propellant fill pressure, used for density
-'''
+    outputs = {
+        "OX": {
+            "m_dot": MDOT_LOX,
+            "V_dot": vdot_lox,
+            "SCFM": scfm_lox,
+            "Gas m_dot": mdot_gas_lox,
+            "Throat Area": throat_area_lox,
+            "Throat Diameter": throat_dia_lox,
+            "Cv": Cv_lox
+        },
 
-# Bottle Test Case
-# Change These
-P_TANK = PMAX_TANK  # Prop tank pressure
-P_COPV = PMAX_BOTTLE
-V_COPV = V_BOTTLE
+        "FU": {
+            "m_dot": MDOT_FU,
+            "V_dot": vdot_fu,
+            "SCFM": scfm_fu,
+            "Gas m_dot": mdot_gas_fu,
+            "Throat Area": throat_area_fu,
+            "Throat Diameter": throat_dia_fu,
+            "Cv": Cv_fu
+        },
 
-# Leave these
-T_COPV = T_STD
-T_TANK = T_isent_exp(T_STD, P_COPV, P_TANK, GAS_TYPE)
-P_FILL = 40 * u('psi')  # Propellant fill pressure, used for density
+        "Config": {
+            "Oxidizer": OX,
+            "Fuel": FU,
+            "Tank Pressure": P_TANK,
+            "Tank Volume": V_TANK,
+            "Bottle Pressure": P_bottle,
+            "Bottle Volume": V_bottle,
+            "Bottle Temp": T_COPV,
+            "Press Gas Temp": T_TANK
+        }
+    }
 
+    return outputs
 
-# ------- MAIN RUN - DON'T CHANGE VARS -------
-
-# Liquid Oxygen
-vdot_lox = prop_vol_flow(OX, MDOT_LOX, P_FILL)
-scfm_lox = scfm(vdot_lox, P_TANK, T_TANK)
-mdot_n2_lox = m_dot(vdot_lox, P_TANK, T_TANK, GAS_TYPE)
-throat_area_lox, throat_dia_lox = throat_calcs(mdot_n2_lox, P_COPV, T_COPV, GAS_TYPE)
-Cv_lox = c_v(scfm_lox, P_COPV, GAS_TYPE)
-
-# Fuel
-vdot_fu = prop_vol_flow(FU, MDOT_FU, P_FILL)
-scfm_fu = scfm(vdot_fu, P_TANK, T_TANK)
-mdot_n2_fu = m_dot(vdot_fu, P_TANK, T_TANK, GAS_TYPE)
-throat_area_fu, throat_dia_fu = throat_calcs(mdot_n2_fu, P_COPV, T_COPV, GAS_TYPE)
-Cv_fu = c_v(scfm_fu, P_COPV, GAS_TYPE)
-
-print(f"Simulation of pressurization of {FU} and {OX} test with two {V_TANK.to('L'): ~P.2f} tanks from {V_COPV.to('L'): ~P.2f} COPV.")
-print(f"Maintaining tank pressure of {P_TANK.to('psi'): ~P.2f} from {P_COPV.to('psi'): ~P.2f} initial COPV pressurization.")
-print("Isentropic temp:", f"{T_TANK.to('kelvin'): ~P.2f}")
-print("Mass Flow Rates (lox, fu): ", f"{MDOT_LOX.to('kg/s'): ~P.2f}, {MDOT_FU.to('kg/s'): ~P.2f}")
-print("Tank pressure and press gas temp: ", f"{P_TANK.to('psi'): ~P.2f}, {T_TANK.to('kelvin'): ~P.2f}")
-print("COPV pressure and press gas temp: ", f"{P_COPV.to('psi'): ~P.2f}, {T_COPV.to('kelvin'): ~P.2f}")
-print()
-print("m_dot (lox, fu):", f"{mdot_n2_lox.to('kg/s'): ~P.4f},       " f"{mdot_n2_fu.to('kg/s'): ~P.4f}")
-print("SCFM (lox, fu): ", f"{scfm_lox: ~P.4f},  " f"{scfm_fu: ~P.4f}")
-print("Area (lox, fu): ", f"{throat_area_lox: ~P.4f},        ", f"{throat_area_fu: ~P.4f}")
-print("Dia (lox, fu):  ", f"{throat_dia_lox: ~P.4f},         ", f"{throat_dia_fu: ~P.4f}")
-print("C_v (lox, fu):  ", f"{Cv_lox: <.4f},            ", f"{Cv_fu: <.4f}")
+test1 = run_test(980*u('psi'), copv_init_press(980*u('psi'), V_TANK, V_COPV, 'N2'), V_COPV, 'N2')
+test2 = run_test(1400*u('psi'), copv_init_press(1400*u('psi'), V_TANK, V_BOTTLE, 'N2'), V_BOTTLE, 'N2')
+test3 = run_test(1400*u('psi'), 6000*u('psi'), V_BOTTLE, 'N2')
+test4 = run_test(1049*u('psi'), copv_init_press(980*u('psi'), V_TANK, V_COPV, 'N2'), V_COPV, 'N2')
+test5 = run_test(1400*u('psi'), copv_init_press(1400*u('psi'), V_TANK, V_BOTTLE*3, 'N2'), V_BOTTLE*3, 'N2')
