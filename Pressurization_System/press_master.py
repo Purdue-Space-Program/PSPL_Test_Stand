@@ -396,11 +396,12 @@ def run_test(P_tank, P_bottle, V_bottle, tube_dia, gas_type):
     #print("Mach (lox, fu):  ", f"{mach_lox: ~P.4f},         ", f"{mach_fu: ~P.4f}")
 
     T1, P1, T0, P0, M, a1, v1 = isentropic_flow(T_COPV, P_bottle, mdot_gas_lox, tube_dia, "N2")
-    T0, P0, T2, P2, M2, a2, v2 = fanno_flow(T0, P0, T1, P1, M, 5 * u('ft'), mdot_gas_lox, tube_dia, "N2")
+    T0, P0, T2, P2, M2, a2, v2 = fanno_flow(T0, P0, T1, P1, M, 10 * u('ft'), mdot_gas_lox, tube_dia, "N2")
     a2.ito('m/s')
     v2.ito('m/s')
     P1.ito('psi')
     P0.ito('psi')
+    P2.ito('psi')
     print("T0, P0, T1, P1, M, speed of sound, velocity:", f"{T0: ~P.4f}, {P0: ~P.4f}, {T1: ~P.4f}, {P1: ~P.4f}, {M: ~P.4f}, {a1: ~P.4f}, {v1: ~P.4f},")
     print("T0, P0, T2, P2, M2, speed of sound, velocity:", f"{T0: ~P.4f}, {P0: ~P.4f}, {T2: ~P.4f}, {P2: ~P.4f}, {M2: ~P.4f}, {a2: ~P.4f}, {v2: ~P.4f},")
 
