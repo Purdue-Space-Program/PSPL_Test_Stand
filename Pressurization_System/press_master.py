@@ -36,13 +36,28 @@ V_TANK = 3 * u('ft^3')
 # region Functions
 # ------- FUNCTIONS -------
 # Functions
-def get_constants(gas):
+def get_constants(gas, T0=T_STD, P0=P_STD):
     '''
     Returns constant gas properties with units for various gases. 
 
     Returns: R, gamma, S_g, choke ratio
     '''
-
+    if gas == 'N2':
+        gas = 'Nitrogen'
+    elif gas == 'He':
+        gas = 'Helium'
+    elif gas == 'H2':
+        gas = 'Hydrogen'
+    T0.ito_base_units()
+    P0.ito_base_units()
+    CP = cp.PropsSI('CPMASS', 'P', P0.m, 'T', T0.m, gas) * u('J/kg/K')
+    CV = cp.PropsSI('CVMASS', 'P', P0.m, 'T', T0.m, gas) * u('J/kg/K')
+    rho = cp.PropsSI('D', 'P', P0.m, 'T', T0.m, gas) * u('kg/m^3')
+    S_g = rho / 1000 * u('kg/m^3')
+    R = CP - CV
+    gamma = CP / CV
+    choke = 1 / (2 / (gamma + 1)) ** (gamma / (gamma - 1))
+    '''
     if gas == 'N2':
         R_N2 = 0.2968 * u('kJ/(kg*K)')  # R constant for N2
         GAMMA_N2 = 1.47 * u('dimensionless')  # Gamma constant for N2
@@ -55,8 +70,11 @@ def get_constants(gas):
         GAMMA_HE = 0.0 * u('dimensionless')  # Gamma constant for N2
         S_G_HE = Q_(0.0,'dimensionless')
         CHOKE_HE = 0
-
+    
         return R_HE, GAMMA_HE, S_G_HE, CHOKE_HE
+    '''
+
+    return R, gamma, S_g, choke
 
 def prop_vol_flow(prop, m_dot, P):
     '''
@@ -177,9 +195,15 @@ def isentropic_flow(T0, P0, m_dot, dia, gas_type):
     Returns: T1, P1, T0, P0, M, a, v (Temperature post-expansion, pressure post-expansion, mach, speed of sound, velocity)
     '''
     area = np.pi * (dia / 2) ** 2  # Flow area (tube)
-    R, gamma, S_g, choke = get_constants(gas_type)  # Gas constants
+    R, gamma, S_g, choke = get_constants(gas_type, T0, P0)  # Gas constants
 
-    p0 = P0 / (R * T0)  # Stagnation density
+    if gas_type == 'N2':
+        gas_type = 'Nitrogen'
+    elif gas_type == 'He':
+        gas_type = 'Helium'
+    elif gas_type == 'H2':
+        gas_type = 'Hydrogen'
+    p0 = cp.PropsSI('D', 'P', P0.to_base_units().m, 'T', T0.to_base_units().m, gas_type) * u('kg/m^3')
 
     m_dot.ito_base_units()
     area.ito_base_units()
@@ -188,12 +212,9 @@ def isentropic_flow(T0, P0, m_dot, dia, gas_type):
     p0.ito_base_units()
     T0.ito_base_units()
 
-    M = Symbol('M')
-    #eqn = -m_dot + p0 * (1 + (gamma - 1) / 2 * M ** 2) ** (-1 / (gamma - 1)) * area * np.sqrt(gamma * R * T0 * (1 + (gamma - 1) / 2 * M ** 2) ** -1)
-
-    #eqn = -m_dot + (area * P0) / np.sqrt(T0) * np.sqrt(gamma / R) * M * (1 + ((gamma - 1) / 2) * M ** 2) ** (-(gamma + 1) / (2 * (gamma - 1))) #  Compressible orifice flow equation: https://www.grc.nasa.gov/www/k-12/airplane/Images/mflchk.gif
-    eqn = -m_dot.m + p0.m * (1 + (gamma.m - 1) / 2 * M ** 2) ** (-1 / (gamma.m - 1)) * area.m * sqrt(gamma.m * R.m * T0.m * (1 + (gamma.m - 1) / 2 * M ** 2) ** -1) * M
-    M = float(nsolve(eqn, M, 0.01)) * u('dimensionless') # Solve for mach number following flow 
+    eqn = lambda M : -np.float64(m_dot.m) + np.float64(p0.m) * (1 + (np.float64(gamma.m) - 1) / 2 * M ** 2) ** (-1 / (np.float64(gamma.m) - 1)) * np.float64(area.m) * np.sqrt(np.float64(gamma.m) * np.float64(R.m) * np.float64(T0.m) * (1 + (np.float64(gamma.m) - 1) / 2 * M ** 2) ** -1) * M
+    M = fsolve(eqn, 0.01)
+    M = float(M[0]) * u('dimensionless')
 
     # Isentropic flow equations: https://www.grc.nasa.gov/www/k-12/airplane/Images/isentrop.gif
     T1 = T0 * (1 + (gamma - 1) / 2 * M ** 2) ** -1  # Flow temperature
@@ -204,7 +225,7 @@ def isentropic_flow(T0, P0, m_dot, dia, gas_type):
     return T1, P1, T0, P0, M, a, vel
 
 def fanno_parameter(gamma, M):
-    return (1 - M**2) / (gamma * M**2) + (gamma + 1) / (2 * gamma) * log(((gamma + 1) * M**2) / (2 * (1 + (gamma - 1) / 2 * M**2)))
+    return ((1 - M**2) / (gamma * M**2) + (gamma + 1) / (2 * gamma) * log(((gamma + 1) * M**2) / (2 * (1 + (gamma - 1) / 2 * M**2)))).to('dimensionless')
 
 def mach_from_fanno(gamma, fanno):
     fanno.ito_base_units()
@@ -220,7 +241,7 @@ def mach_from_fanno(gamma, fanno):
     return M
 
 def fanno_flow(T0, P0, T1, P1, M1, L, m_dot, dia, gas_type):
-    R, gamma, S_g, choke = get_constants(gas_type)  # Gas constants
+    R, gamma, S_g, choke = get_constants(gas_type, T0, P0)  # Gas constants
 
     if gas_type == "He":
         gas_type = "Helium"
@@ -228,7 +249,9 @@ def fanno_flow(T0, P0, T1, P1, M1, L, m_dot, dia, gas_type):
         gas_type = "Nitrogen"
 
     dyn_visc = cp.PropsSI('V', "P", P1.to('Pa').m, "T", T1.to('kelvin').m, gas_type) * u('Pa') * u('second')
-    Re = ((m_dot * dia) / (dyn_visc * (np.pi * dia ** 2 / 4))).to('dimensionless')
+    rho = cp.PropsSI('D', 'P', P1.to_base_units().m, 'T', T1.to_base_units().m, gas_type) * u('kg/m^3')
+    vel = M1 * np.sqrt(gamma * R * T1)
+    Re = (rho * vel * dia / dyn_visc).to('dimensionless')
 
     # Fanning friction factor using equations from https://en.wikipedia.org/wiki/Fanning_friction_factor#Hydraulically_smooth_piping
     # Assumes hydraulically smooth piping
@@ -240,23 +263,25 @@ def fanno_flow(T0, P0, T1, P1, M1, L, m_dot, dia, gas_type):
         print("Fanning error!!")
 
     M1_fanno = fanno_parameter(gamma, M1)
-    L_fanno = 4 * fanning * L / dia
+    L_fanno = (4 * fanning * L / dia).to('dimensionless')
 
     M2_fanno = M1_fanno - L_fanno
     M2 = mach_from_fanno(gamma, M2_fanno)
 
     print(M2)
 
-    P1_Pstar = 1 / M1 * np.sqrt((gamma + 1) / 2 * (1 + (gamma - 1) / 2 * M1 ** 2))
-    P2_Pstar = 1 / M2 * np.sqrt((gamma + 1) / 2 * (1 + (gamma - 1) / 2 * M2 ** 2))
-    P2 = P1 * 1 / P1_Pstar * P2_Pstar
-
-    T1_Tstar = (gamma + 1) / (2 * (1 + (gamma - 1) / 2) * M1 ** 2)
-    T2_Tstar = (gamma + 1) / (2 * (1 + (gamma - 1) / 2) * M2 ** 2)
-    T2 = T1 * 1 / T1_Tstar * T2_Tstar
+    P1_Pstar = 1 / (M1 * np.sqrt((2 / (gamma + 1)) * (1 + (gamma - 1) / 2 * M1**2)))
+    P2_Pstar = 1 / (M2 * np.sqrt((2 / (gamma + 1)) * (1 + (gamma - 1) / 2 * M2**2)))
+    P2 = P1 * P2_Pstar / P1_Pstar
+    
+    T1_Tstar = 1 / ((2 / (gamma + 1)) * (1 + (gamma - 1) / 2 * M1 ** 2))
+    T2_Tstar = 1 / ((2 / (gamma + 1)) * (1 + (gamma - 1) / 2 * M2 ** 2))
+    T2 = T1 * T2_Tstar / T1_Tstar
 
     a = np.sqrt(gamma * R * T2)  # Speed of sound
+    a.ito('m/s')
     v = M2 * a
+    v.ito('m/s')
 
     print(f"Pressure drop over {L.to('ft'): ~P.2f} long section: {(P2-P1).to('psi'): ~P.2f}")
     return T0, P0, T2, P2, M2, a, v
@@ -371,10 +396,12 @@ def run_test(P_tank, P_bottle, V_bottle, tube_dia, gas_type):
     #print("Mach (lox, fu):  ", f"{mach_lox: ~P.4f},         ", f"{mach_fu: ~P.4f}")
 
     T1, P1, T0, P0, M, a1, v1 = isentropic_flow(T_COPV, P_bottle, mdot_gas_lox, tube_dia, "N2")
-    T0, P0, T2, P2, M2, a2, v2 = fanno_flow(T0, P0, T1, P1, M, 5000 * u('ft'), mdot_gas_lox, tube_dia, "N2")
+    T0, P0, T2, P2, M2, a2, v2 = fanno_flow(T0, P0, T1, P1, M, 5 * u('ft'), mdot_gas_lox, tube_dia, "N2")
     a2.ito('m/s')
     v2.ito('m/s')
-    print("T1, P1, T0, P0, M, speed of sound, velocity:", f"{T1: ~P.4f}, {P1: ~P.4f}, {T0: ~P.4f}, {P0: ~P.4f}, {M: ~P.4f}, {a1: ~P.4f}, {v1: ~P.4f},")
+    P1.ito('psi')
+    P0.ito('psi')
+    print("T0, P0, T1, P1, M, speed of sound, velocity:", f"{T0: ~P.4f}, {P0: ~P.4f}, {T1: ~P.4f}, {P1: ~P.4f}, {M: ~P.4f}, {a1: ~P.4f}, {v1: ~P.4f},")
     print("T0, P0, T2, P2, M2, speed of sound, velocity:", f"{T0: ~P.4f}, {P0: ~P.4f}, {T2: ~P.4f}, {P2: ~P.4f}, {M2: ~P.4f}, {a2: ~P.4f}, {v2: ~P.4f},")
 
     outputs = {
