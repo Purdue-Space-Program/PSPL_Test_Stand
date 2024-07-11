@@ -4,11 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 u = UnitRegistry()
 Q_ = u.Quantity
-from sympy.solvers import nsolve
 from scipy.optimize import fsolve
-from sympy import Symbol
-from sympy import log
-from sympy import sqrt
 
 # ------- CONSTANTS -------
 # Standard Temperature and Pressure
@@ -48,31 +44,17 @@ def get_constants(gas, T0=T_STD, P0=P_STD):
         gas = 'Helium'
     elif gas == 'H2':
         gas = 'Hydrogen'
+
     T0.ito_base_units()
     P0.ito_base_units()
     CP = cp.PropsSI('CPMASS', 'P', P0.m, 'T', T0.m, gas) * u('J/kg/K')
     CV = cp.PropsSI('CVMASS', 'P', P0.m, 'T', T0.m, gas) * u('J/kg/K')
-    rho = cp.PropsSI('D', 'P', P0.m, 'T', T0.m, gas) * u('kg/m^3')
-    S_g = rho / 1000 * u('kg/m^3')
+    mm_gas = cp.PropsSI('M', 'P', P0.m, 'T', T0.m, gas) * u('kg/mol')
+    mm_air = cp.PropsSI('M', 'P', P0.m, 'T', T0.m, 'Air') * u('kg/mol')
+    S_g = mm_gas / mm_air
     R = CP - CV
     gamma = CP / CV
     choke = 1 / (2 / (gamma + 1)) ** (gamma / (gamma - 1))
-    '''
-    if gas == 'N2':
-        R_N2 = 0.2968 * u('kJ/(kg*K)')  # R constant for N2
-        GAMMA_N2 = 1.47 * u('dimensionless')  # Gamma constant for N2
-        S_G_N2 = Q_(0.9669,'dimensionless')
-        CHOKE_N2 = 1.895
-
-        return R_N2, GAMMA_N2, S_G_N2, CHOKE_N2
-    elif gas == 'He':
-        R_HE = 0.0 * u('kJ/(kg*K)')
-        GAMMA_HE = 0.0 * u('dimensionless')  # Gamma constant for N2
-        S_G_HE = Q_(0.0,'dimensionless')
-        CHOKE_HE = 0
-    
-        return R_HE, GAMMA_HE, S_G_HE, CHOKE_HE
-    '''
 
     return R, gamma, S_g, choke
 
@@ -111,7 +93,7 @@ def m_dot(acfm, P, T, gas):
 
 def throat_calcs(m_dot, P, T, gas):
     '''
-    Returns throat area and diameter for a choked flow at the given pressure and temperature. 
+    Returns throat area and diameter for a choked flow in terms of m_dot at the given pressure and temperature. 
 
     Returns: Area (in^3), Diameter (in)
     '''
@@ -122,17 +104,48 @@ def throat_calcs(m_dot, P, T, gas):
     throat_dia = 2 * np.sqrt(throat_area / np.pi)
     return throat_area.to('in^2'), throat_dia.to('in')
 
-def c_v(scfm, P, gas):
+def c_v(scfm, P1, P2, T, gas):
     '''
     Returns the Cv for a choked compressible flow at the given pressure.
-    UPDATES NEEDED: Need non-choked functionality
+ 
 
     Returns: Cv
     '''
 
-    R, gamma, S_g, choke = get_constants(gas)
-    C_v = (scfm.to('ft^3/min').m * 2 * np.sqrt(S_g.m)) / P.to('psi').m  # Note:units in psia and SCFM
+    R, gamma, S_g, choke = get_constants(gas, T, P1)
+
+    P1.ito_base_units()
+    T.ito_base_units()
+
+    if P1 < (choke * P2):
+        # Sub-critical
+        C_v = ((scfm.to('ft^3/min').m) / (22.67 * P1.to('psi').m * (1 - (2 * (P2.to('psi').m - P1.to('psi').m) / (3 * P1.to('psi').m))) * (np.sqrt((P2.to('psi').m - P1.to('psi').m) / (P1.to('psi').m * S_g.to('dimensionless').m * T.to('rankine'))))))
+
+    else:
+        C_v = (scfm.to('ft^3/min').m) / (0.471 * 22.67 * P1.to('psi').m * np.sqrt(1 / (S_g.to('dimensionless').m * T.to('rankine').m)))
+    
+    # C_v = (scfm.to('ft^3/min').m * 2 * np.sqrt(S_g.m)) / P1.to('psi').m  # Note:units in psia and SCFM
     return C_v
+
+
+def valve(c_v, scfm, P, T, gas):
+    R, gamma, S_g, choke = get_constants(gas)
+
+    scfm.ito('ft^3/min')
+    P.ito('psi')
+    S_g.ito('dimensionless')
+    T.ito('rankine')
+    c_v = np.float64(c_v.m)
+    scfm = np.float64(scfm.m)
+    P = np.float64(P.m)
+    T = np.float64(T.m)
+    N2 = 22.67
+    eqn = lambda dP: -scfm + N2 * c_v * P * (1 - (2 * dP)/(3 * P)) * np.sqrt((dP)/(P * S_g * T))
+    dP = fsolve(eqn, -10)
+
+
+
+
 
 def copv_init_press(P_tank, V_tank, V_copv, gas):
     '''
@@ -226,7 +239,7 @@ def isentropic_flow(T0, P0, m_dot, dia, gas_type):
     return T1, P1, T0, P0, M, a, vel
 
 def fanno_parameter(gamma, M):
-    return ((1 - M**2) / (gamma * M**2) + (gamma + 1) / (2 * gamma) * log(((gamma + 1) * M**2) / (2 * (1 + (gamma - 1) / 2 * M**2)))).to('dimensionless')
+    return ((1 - M**2) / (gamma * M**2) + (gamma + 1) / (2 * gamma) * np.log(((gamma + 1) * M**2) / (2 * (1 + (gamma - 1) / 2 * M**2)))).to('dimensionless')
 
 def mach_from_fanno(gamma, fanno):
     fanno.ito_base_units()
@@ -259,18 +272,26 @@ def fanno_flow(T0, P0, T1, P1, M1, L, dia, gas_type):
 
     # Fanning friction factor using equations from https://en.wikipedia.org/wiki/Fanning_friction_factor#Hydraulically_smooth_piping
     # Assumes hydraulically smooth piping
+    '''
     if 2100 < Re < 10**5:
         fanning = 0.0791 / Re**0.25
     elif 10**4 < Re < 10**7:
         fanning = 0.0014 + 0.125 / Re**0.32
     else:
         print("Reynolds number for Fanning friction factor out of range!!")
+    '''
 
+    fanning = 0.0014 + 0.125 / Re**0.32
+    
     M1_fanno = fanno_parameter(gamma, M1)
     L_fanno = (4 * fanning * L / dia).to('dimensionless')
 
     M2_fanno = M1_fanno - L_fanno
     M2 = mach_from_fanno(gamma, M2_fanno)
+
+    P01_P0star = 1 / M1 * ((2 / (gamma + 1)) * (1 + (gamma - 1) / 2 * M1 ** 2)) ** ((gamma + 1)/(2 * (gamma - 1)))
+    P02_P0star = 1 / M2 * ((2 / (gamma + 1)) * (1 + (gamma - 1) / 2 * M2 ** 2)) ** ((gamma + 1)/(2 * (gamma - 1)))
+    P02 = P0 * P02_P0star / P01_P0star 
 
     P1_Pstar = 1 / (M1 * np.sqrt((2 / (gamma + 1)) * (1 + (gamma - 1) / 2 * M1**2)))
     P2_Pstar = 1 / (M2 * np.sqrt((2 / (gamma + 1)) * (1 + (gamma - 1) / 2 * M2**2)))
@@ -285,8 +306,8 @@ def fanno_flow(T0, P0, T1, P1, M1, L, dia, gas_type):
     v = M2 * a
     v.ito('m/s')
 
-    print(f"Pressure drop over {L.to('ft'): ~P.2f} long section: {(P2-P1).to('psi'): ~P.2f}")
-    return T0, P0, T2, P2, M2, a, v
+    print(f"Pressure drop over {L.to('ft'): ~P.2f} long section: {(P02-P0).to('psi'): ~P.2f}")
+    return T0, P02, T2, P2, M2, a, v
     
 
 def vel_ideal_gas(T, P, dia, m_dot, gas_type):
@@ -358,8 +379,6 @@ def run_test(P_tank, P_bottle, V_bottle, tube_dia, gas_type):
     T_COPV = T_STD
     T_TANK = T_isent_exp(T_STD, P_bottle, P_TANK, GAS_TYPE)
     P_FILL = 40 * u('psi')  # Propellant fill pressure, used for density
-
-
     # ------- MAIN RUN - DON'T CHANGE VARS -------
 
     # Liquid Oxygen
@@ -367,7 +386,7 @@ def run_test(P_tank, P_bottle, V_bottle, tube_dia, gas_type):
     scfm_lox = scfm(vdot_lox, P_TANK, T_TANK)
     mdot_gas_lox = m_dot(vdot_lox, P_TANK, T_TANK, GAS_TYPE)
     throat_area_lox, throat_dia_lox = throat_calcs(mdot_gas_lox, P_bottle, T_COPV, GAS_TYPE)
-    Cv_lox = c_v(scfm_lox, P_bottle, GAS_TYPE)
+    Cv_lox = c_v(scfm_lox, P_bottle, P_TANK, T_COPV, GAS_TYPE)
     vel_lox, mach_lox = vel_ideal_gas(T_COPV, P_bottle, tube_dia, mdot_gas_lox, GAS_TYPE)
 
     # Fuel
@@ -375,7 +394,7 @@ def run_test(P_tank, P_bottle, V_bottle, tube_dia, gas_type):
     scfm_fu = scfm(vdot_fu, P_TANK, T_TANK)
     mdot_gas_fu = m_dot(vdot_fu, P_TANK, T_TANK, GAS_TYPE)
     throat_area_fu, throat_dia_fu = throat_calcs(mdot_gas_fu, P_bottle, T_COPV, GAS_TYPE)
-    Cv_fu = c_v(scfm_fu, P_bottle, GAS_TYPE)
+    Cv_fu = c_v(scfm_fu, P_bottle, P_TANK, T_COPV, GAS_TYPE)
     
     print(f"Simulation of pressurization of {FU} and {OX} test with two {V_TANK.to('L'): ~P.2f} tanks from {V_bottle.to('L'): ~P.2f} COPV.")
     print(f"Maintaining tank pressure of {P_TANK.to('psi'): ~P.2f} from {P_bottle.to('psi'): ~P.2f} initial COPV pressurization.")
@@ -394,15 +413,38 @@ def run_test(P_tank, P_bottle, V_bottle, tube_dia, gas_type):
     #print("Velocity (lox, fu):  ", f"{vel_lox: ~P.4f},         ", f"{vel_fu: ~P.4f}")
     #print("Mach (lox, fu):  ", f"{mach_lox: ~P.4f},         ", f"{mach_fu: ~P.4f}")
 
-    T1, P1, T0, P0, M, a1, v1 = isentropic_flow(T_COPV, P_bottle, mdot_gas_lox, tube_dia, "N2")
-    T0, P0, T2, P2, M2, a2, v2 = fanno_flow(T0, P0, T1, P1, M, 10 * u('ft'), tube_dia, "N2")
+    T1, P1, T01, P01, M, a1, v1 = isentropic_flow(T_COPV, P_bottle, mdot_gas_lox + mdot_gas_fu, tube_dia, "N2")
+    T02, P02, T2, P2, M2, a2, v2 = fanno_flow(T01, P01, T1, P1, M, 2 * u('ft'), tube_dia, "N2")
+
+    T3_lox, P3_lox, T03_lox, P03_lox, M3_lox, a3_lox, v3_lox = isentropic_flow(T02, P02, mdot_gas_lox, tube_dia, "N2")
+    T04_lox, P04_lox, T4_lox, P4_lox, M4_lox, a4_lox, v4_lox = fanno_flow(T03_lox, P03_lox, T3_lox, P3_lox, M3_lox, 7 * u('ft'), tube_dia, "N2")
+
+    T3_fu, P3_fu, T03_fu, P03_fu, M3_fu, a3_fu, v3_fu = isentropic_flow(T02, P02, mdot_gas_fu, tube_dia, "N2")
+    T04_fu, P04_fu, T4_fu, P4_fu, M4_fu, a4_fu, v4_fu = fanno_flow(T03_fu, P03_fu, T3_fu, P3_fu, M3_fu, 7 * u('ft'), tube_dia, "N2")
+    
     a2.ito('m/s')
     v2.ito('m/s')
     P1.ito('psi')
-    P0.ito('psi')
     P2.ito('psi')
-    print("T0, P0, T1, P1, M, speed of sound, velocity:", f"{T0: ~P.4f}, {P0: ~P.4f}, {T1: ~P.4f}, {P1: ~P.4f}, {M: ~P.4f}, {a1: ~P.4f}, {v1: ~P.4f},")
-    print("T0, P0, T2, P2, M2, speed of sound, velocity:", f"{T0: ~P.4f}, {P0: ~P.4f}, {T2: ~P.4f}, {P2: ~P.4f}, {M2: ~P.4f}, {a2: ~P.4f}, {v2: ~P.4f},")
+    P3_fu.ito('psi')
+    P3_lox.ito('psi')
+    P4_fu.ito('psi')
+    P4_lox.ito('psi')
+    P01.ito('psi')
+    P02.ito('psi')
+    P03_fu.ito('psi')
+    P03_lox.ito('psi')
+    P04_fu.ito('psi')
+    P04_lox.ito('psi')
+
+    print("T01, P01, T1, P1, M1, speed of sound, velocity:", f"{T01: ~P.4f}, {P01: ~P.4f}, {T1: ~P.4f}, {P1: ~P.4f}, {M: ~P.4f}, {a1: ~P.4f}, {v1: ~P.4f},")
+    print("T02, P02, T2, P2, M2, speed of sound, velocity:", f"{T02: ~P.4f}, {P02: ~P.4f}, {T2: ~P.4f}, {P2: ~P.4f}, {M2: ~P.4f}, {a2: ~P.4f}, {v2: ~P.4f},")
+
+    print("T03_lox, P03_lox, T3_lox, P3_lox, M3_lox, speed of sound 3 lox, velocity 3 lox:", f"{T03_lox: ~P.4f}, {P03_lox: ~P.4f}, {T3_lox: ~P.4f}, {P3_lox: ~P.4f}, {M3_lox: ~P.4f}, {a3_lox: ~P.4f}, {v3_lox: ~P.4f},")
+    print("T04_lox, P04_lox, T4_lox, P4_lox, M4_lox, speed of sound 4 lox, velocity 4 lox:", f"{T04_lox: ~P.4f}, {P04_lox: ~P.4f}, {T4_lox: ~P.4f}, {P4_lox: ~P.4f}, {M4_lox: ~P.4f}, {a4_lox: ~P.4f}, {v4_lox: ~P.4f},")
+
+    print("T03_fu, P03_fu, T3_fu, P3_fu, M3_fu, speed of sound 3 fu, velocity 3 fu:", f"{T03_fu: ~P.4f}, {P03_fu: ~P.4f}, {T3_fu: ~P.4f}, {P3_fu: ~P.4f}, {M3_fu: ~P.4f}, {a3_fu: ~P.4f}, {v3_fu: ~P.4f},")
+    print("T04_fu, P04_fu, T4_fu, P4_fu, M4_fu, speed of sound 4 fu, velocity 4 fu:", f"{T04_fu: ~P.4f}, {P04_fu: ~P.4f}, {T4_fu: ~P.4f}, {P4_fu: ~P.4f}, {M4_fu: ~P.4f}, {a4_fu: ~P.4f}, {v4_fu: ~P.4f},")
 
     outputs = {
         "OX": {
