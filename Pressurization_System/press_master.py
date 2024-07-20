@@ -6,12 +6,9 @@ u = UnitRegistry()
 Q_ = u.Quantity
 from scipy.optimize import fsolve
 
-# ------- CONSTANTS -------
 # Standard Temperature and Pressure
 T_STD = Q_(60, 'degF').to('kelvin')  # Standard temperature
 P_STD = 14.696 * u('psi')  # Standard pressure
-
-
 
 # ------- INPUTS -------
 # Big CMS COPV Parameters
@@ -24,19 +21,29 @@ V_BOTTLE = 43.3 * u('L')
 
 # Prop Tank Parameters
 PMAX_TANK = 1400 * u('psi')
-# V_TANK = 1.009 * u('ft^3')
-# V_TANK = np.pi * (7.625 / 2 * u('in')) ** 2 * 9 * u('ft')
-V_TANK = 3 * u('ft^3')
+V_TANK = 3.40 * u('ft^3')
 
-
-# region Functions
 # ------- FUNCTIONS -------
-# Functions
+
+def prop_vol_flow(prop, m_dot, P):
+    '''
+    Returns propellant volumetric flow rate out of tanks 
+
+    Returns: Volumetric flow (ft^3/min)
+    '''
+
+    rho = cp.PropsSI('D', 'P', P.to('Pa').m, 'Q', 0, prop) * u('kg/m^3')
+    T_sat = cp.PropsSI('T', 'P', P.to('Pa').m, 'Q', 0, prop) * u('kelvin')
+    v_dot = m_dot / rho  # Volumetric flow out of tank 
+
+    return v_dot.to('ft^3/min')
+
+# region Compressible Gas Tools
 def get_constants(gas, T0=T_STD, P0=P_STD):
     '''
     Returns constant gas properties with units for various gases. 
 
-    Returns: R, gamma, S_g, choke ratio
+    Returns: R, gamma, S_g, choke ratio (P1 / P2)
     '''
     if gas == 'N2':
         gas = 'Nitrogen'
@@ -55,21 +62,11 @@ def get_constants(gas, T0=T_STD, P0=P_STD):
     R = CP - CV
     gamma = CP / CV
     choke = 1 / (2 / (gamma + 1)) ** (gamma / (gamma - 1))
+    
+    T0.ito('kelvin')
+    P0.ito('psi')
 
     return R, gamma, S_g, choke
-
-def prop_vol_flow(prop, m_dot, P):
-    '''
-    Returns propellant volumetric flow rate out of tanks 
-
-    Returns: Volumetric flow (ft^3/min)
-    '''
-
-    rho = cp.PropsSI('D', 'P', P.to('Pa').m, 'Q', 0, prop) * u('kg/m^3')
-    T_sat = cp.PropsSI('T', 'P', P.to('Pa').m, 'Q', 0, prop) * u('kelvin')
-    v_dot = m_dot / rho  # Volumetric flow out of tank 
-
-    return v_dot.to('ft^3/min')
 
 def scfm(acfm, P_act, T_act):
     '''
@@ -103,7 +100,9 @@ def throat_calcs(m_dot, P, T, gas):
     throat_area = ((m_dot * np.sqrt(T)) / (P * np.sqrt(gamma / R) * np.power(((gamma + 1) / 2), (-(gamma + 1)/(2 * (gamma - 1))))))
     throat_dia = 2 * np.sqrt(throat_area / np.pi)
     return throat_area.to('in^2'), throat_dia.to('in')
+# endregion
 
+# region Valves
 def c_v(scfm, P1, P2, T, gas):
     '''
     Returns the Cv for a choked compressible flow at the given pressure.
@@ -127,26 +126,34 @@ def c_v(scfm, P1, P2, T, gas):
     # C_v = (scfm.to('ft^3/min').m * 2 * np.sqrt(S_g.m)) / P1.to('psi').m  # Note:units in psia and SCFM
     return C_v
 
-
-def valve(c_v, scfm, P, T, gas):
+def valve_dP(c_v, scfm, P0, T, gas):
     R, gamma, S_g, choke = get_constants(gas)
 
     scfm.ito('ft^3/min')
-    P.ito('psi')
+    P0.ito('psi')
     S_g.ito('dimensionless')
     T.ito('rankine')
     c_v = np.float64(c_v.m)
     scfm = np.float64(scfm.m)
-    P = np.float64(P.m)
+    P0 = np.float64(P0.m)
     T = np.float64(T.m)
     N2 = 22.67
-    eqn = lambda dP: -scfm + N2 * c_v * P * (1 - (2 * dP)/(3 * P)) * np.sqrt((dP)/(P * S_g * T))
-    dP = fsolve(eqn, -10)
+    eqn = lambda dP: -scfm + N2 * c_v * P0 * (1 - (2 * dP)/(3 * P0)) * np.sqrt((dP)/(P0 * S_g * T))
+    dP = float(np.abs(fsolve(eqn, 0.1)[0])) * u('psi')
 
+    P0 *= u('psi')
+    c_v *= u('dimensionless')
 
+    if P0 - dP < P0 * 1 / choke:
+        #print(1/choke)
+        print('FLOW MAY BE CHOKED IN VALVE!!!')
+        dP = P0 - (P0 * 1 / choke)
 
+    print(f'Pressure drop over valve of Cv {c_v.to("dimensionless"): ~P.2f}: {-dP.to("psi"): ~P.2f}')
+    return -dP
+# endregion
 
-
+# region COPV calcs
 def copv_init_press(P_tank, V_tank, V_copv, gas):
     '''
     Calculates the initial pressure required to pressurize tanks to a given pressure throughout the burn cycle while keeping flow choked.
@@ -189,7 +196,8 @@ def copv_max_tank_press(P_max_copv, V_tank, V_copv, gas):
 
         else:
             return max_press.to('psi')
-        
+# endregion
+   
 def T_isent_exp(T1, P1, P2, gas):
     '''
     Calculates gas temperature following isentropic expansion (T2) from P1, T1 to P2, T2 
@@ -201,6 +209,7 @@ def T_isent_exp(T1, P1, P2, gas):
 
     return (T1 * (P2 / P1)**(1 - 1 / gamma)).to('kelvin')
 
+# region Fanno Flow
 def isentropic_flow(T0, P0, m_dot, dia, gas_type):
     '''
     Calculates isentropic flow given required mass flow and stagnation conditions from T0 (stagnation, bottle), P0 to T1 and P1.
@@ -228,7 +237,7 @@ def isentropic_flow(T0, P0, m_dot, dia, gas_type):
 
     eqn = lambda M : -np.float64(m_dot.m) + np.float64(p0.m) * (1 + (np.float64(gamma.m) - 1) / 2 * M ** 2) ** (-1 / (np.float64(gamma.m) - 1)) * np.float64(area.m) * np.sqrt(np.float64(gamma.m) * np.float64(R.m) * np.float64(T0.m) * (1 + (np.float64(gamma.m) - 1) / 2 * M ** 2) ** -1) * M
     M = fsolve(eqn, 0.01)
-    M = float(M[0]) * u('dimensionless')
+    M = float(np.abs(M[0])) * u('dimensionless')
 
     # Isentropic flow equations: https://www.grc.nasa.gov/www/k-12/airplane/Images/isentrop.gif
     T1 = T0 * (1 + (gamma - 1) / 2 * M ** 2) ** -1  # Flow temperature
@@ -236,7 +245,11 @@ def isentropic_flow(T0, P0, m_dot, dia, gas_type):
     a = np.sqrt(gamma * R * T1)  # Speed of sound
     vel = a * M  # Speed of gas
 
-    return T1, P1, T0, P0, M, a, vel
+    m_dot.ito('kg/s')
+    area.ito('in^2')
+    p0.ito('kg/m^3')
+
+    return T1.to('kelvin'), P1.to('psi'), T0.to('kelvin'), P0.to('psi'), M.to('dimensionless'), a.to('ft/s'), vel.to('ft/s')
 
 def fanno_parameter(gamma, M):
     return ((1 - M**2) / (gamma * M**2) + (gamma + 1) / (2 * gamma) * np.log(((gamma + 1) * M**2) / (2 * (1 + (gamma - 1) / 2 * M**2)))).to('dimensionless')
@@ -250,7 +263,7 @@ def mach_from_fanno(gamma, fanno):
 
     eqn = lambda M : -fanno + (1 - M**2) / (gamma * M**2) + (gamma + 1) / (2 * gamma) * np.log(((gamma + 1) * M**2) / (2 * (1 + (gamma - 1) / 2 * M**2)))
     M = fsolve(eqn, 0.01)
-    M = float(M[0]) * u('dimensionless')
+    M = float(np.abs(M[0])) * u('dimensionless')
 
     return M
 
@@ -285,9 +298,11 @@ def fanno_flow(T0, P0, T1, P1, M1, L, dia, gas_type):
     
     M1_fanno = fanno_parameter(gamma, M1)
     L_fanno = (4 * fanning * L / dia).to('dimensionless')
+    #print("choke length for m1", (M1_fanno * dia / (4 * fanning)))
 
     M2_fanno = M1_fanno - L_fanno
     M2 = mach_from_fanno(gamma, M2_fanno)
+    if M2 > 0.97: print('FLOW MAY BE CHOKED IN TUBE!!!')
 
     P01_P0star = 1 / M1 * ((2 / (gamma + 1)) * (1 + (gamma - 1) / 2 * M1 ** 2)) ** ((gamma + 1)/(2 * (gamma - 1)))
     P02_P0star = 1 / M2 * ((2 / (gamma + 1)) * (1 + (gamma - 1) / 2 * M2 ** 2)) ** ((gamma + 1)/(2 * (gamma - 1)))
@@ -307,10 +322,12 @@ def fanno_flow(T0, P0, T1, P1, M1, L, dia, gas_type):
     v.ito('m/s')
 
     print(f"Pressure drop over {L.to('ft'): ~P.2f} long section: {(P02-P0).to('psi'): ~P.2f}")
-    return T0, P02, T2, P2, M2, a, v
-    
+    return T0.to('kelvin'), P02.to('psi'), T2.to('kelvin'), P2.to('psi'), M2.to('dimensionless'), a.to('ft/s'), v.to('ft/s')  
 
 def vel_ideal_gas(T, P, dia, m_dot, gas_type):
+    '''
+    Finds the velocity of an ideal gas using conservaiton of mass. Depreciated in favor of idsentropic model.
+    '''
     area = np.pi * (dia / 2) ** 2
     R, gamma, S_g, choke = get_constants(gas_type)
     '''
@@ -324,8 +341,9 @@ def vel_ideal_gas(T, P, dia, m_dot, gas_type):
     mach = vel / c
 
     return vel.to('m/s'), mach.to('dimensionless')
+# endregion
 
-# Graphical Functions
+# region Graphical Functions
 def plot_copv():
     copv_pressures = []
     tank_pressures = range(1, 1400)
@@ -349,14 +367,17 @@ def plot_copv():
     print(max_press)
     #plt.annotate(f"({max_press.to('psi'): ~P.2f}, {PMAX_COPV.to('psi'): ~P.2f})", (max_press, PMAX_COPV))
     plt.show()
+# endregion
 
+'''
 
+# region Main Test
 def run_test(P_tank, P_bottle, V_bottle, tube_dia, gas_type):
-    '''
+    ''''''
     Inputs: P_tank, P_bottle, V_bottle, gas_type
 
     Outputs: m_dot, SCFM, Area, Diameter, C_v
-    '''
+    ''''''
     
     # Oxidizer
     OX = 'Oxygen'
@@ -483,3 +504,4 @@ def run_test(P_tank, P_bottle, V_bottle, tube_dia, gas_type):
 # endregion
 
 test4 = run_test(1500*u('psi'), 6000*u('psi'), V_BOTTLE*6, (0.5 - 2*0.065) * u("in"), 'N2')
+'''
