@@ -139,7 +139,7 @@ def valve_dP(c_v, scfm, P0, T, gas):
     T = np.float64(T.m)
     N2 = 22.67
     eqn = lambda dP: -scfm + N2 * c_v * P0 * (1 - (2 * dP)/(3 * P0)) * np.sqrt((dP)/(P0 * S_g * T))
-    dP = float(np.abs(fsolve(eqn, 0.1)[0])) * u('psi')
+    dP = float(np.abs(fsolve(eqn, 0.001)[0])) * u('psi')
 
     P0 *= u('psi')
     c_v *= u('dimensionless')

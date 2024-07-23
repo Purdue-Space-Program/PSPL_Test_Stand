@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 u = UnitRegistry()
 Q_ = u.Quantity
 from scipy.optimize import fsolve
-from press_master import *
+from press_funcs import *
 
 # ------- CONSTANTS -------
 # Standard Temperature and Pressure
@@ -26,27 +26,26 @@ PMAX_TANK = 1400 * u('psi')
 V_TANK = 3.40 * u('ft^3')
 
 
-
 def run_test(combined=False):
 
     # Change These
     # Oxidizer
     OX = 'Oxygen'
-    #MDOT_LOX = 8 * u('kg/s')  # LOX mass flow out of tank
-    MDOT_LOX = 2.916 * u('lb/s')
+    MDOT_LOX = 8 * u('kg/s')  # LOX mass flow out of tank
+    #MDOT_LOX = 2.916 * u('lb/s')
 
     # Fuel
     FU = 'Methane'
-    #MDOT_FU = 3 * u('kg/s')  # Methane mass flow out of tank
-    MDOT_FU = 1.188 * u('lb/s')
+    MDOT_FU = 3 * u('kg/s')  # Methane mass flow out of tank
+    #MDOT_FU = 1.188 * u('lb/s')
 
     # Press Gas
     GAS_TYPE_LOX = 'N2'
-    GAS_TYPE_FU = 'H2'
+    GAS_TYPE_FU = 'He'
 
     # Bottle Test Case
     # Change These
-    P_TANK = 315 * u('psi')  # Prop tank pressure
+    P_TANK = 1500 * u('psi')  # Prop tank pressure
     P_source_lox = 6000 * u('psi')
     P_source_fu = 6000 * u('psi')
     tube_dia = (0.5 - 2*0.065) * u("in")
@@ -110,10 +109,10 @@ def run_test(combined=False):
         throat_area_fu, throat_dia_fu = throat_calcs(mdot_gas_fu, P_source_fu, T_SOURCE, GAS_TYPE_FU)
         Cv_fu = c_v(scfm_fu, P_source_fu, P_TANK, T_SOURCE, GAS_TYPE_FU)
 
-        L_12 = 3 * u('ft')
+        L_12 = 20 * u('ft')
         L_34 = 6 * u('ft')
         L_56 = 10 * u('ft')
-        L_78 = 2 * u('ft')
+        L_78 = 5 * u('ft')
         Cv_1 = 8 * u('dimensionless')
         Cv_2 = 8 * u('dimensionless')
         Cv_3 = 1.3 * u('dimensionless')
@@ -148,10 +147,10 @@ def run_test(combined=False):
         throat_area_lox, throat_dia_lox = throat_calcs(mdot_gas_lox, P_source_lox, T_SOURCE, GAS_TYPE_LOX)
         Cv_lox = c_v(scfm_lox, P_source_lox, P_TANK, T_SOURCE, GAS_TYPE_LOX)
 
-        L_12 = 3 * u('ft')
+        L_12 = 20 * u('ft')
         L_34 = 6 * u('ft')
         L_56 = 10 * u('ft')
-        L_78 = 2 * u('ft')
+        L_78 = 5 * u('ft')
         Cv_1 = 8 * u('dimensionless')
         Cv_2 = 8 * u('dimensionless')
         Cv_3 = 1.3 * u('dimensionless')

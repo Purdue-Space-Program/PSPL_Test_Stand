@@ -1,8 +1,8 @@
-from press_master import run_test
-from press_master import u
-from press_master import copv_init_press
-from press_master import V_TANK
-from press_master import V_COPV
+from press_funcs import run_test
+from press_funcs import u
+from press_funcs import copv_init_press
+from press_funcs import V_TANK
+from press_funcs import V_COPV
 from CoolProp import CoolProp as cp
 from pint import UnitRegistry
 import numpy as np

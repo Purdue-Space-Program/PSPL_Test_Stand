@@ -1,4 +1,4 @@
-from press_master import *
+from press_funcs import *
 from pint import UnitRegistry
 import numpy as np
 import matplotlib.pyplot as plt

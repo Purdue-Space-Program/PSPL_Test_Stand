@@ -1,5 +1,5 @@
 from math import *
-from press_master import *
+from press_funcs import *
 from reg_sizing import *
 
 # Bottles
