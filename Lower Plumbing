@@ -26,11 +26,11 @@ vapPressWater = (Q(.2, 'psi').to('Pa')).magnitude # pascals
 print("Vapor Pressur of Water", vapPressWater)
 
 # Density of water at the given inlet pressure
-rhoWater = CP.PropsSI('D', 'P', (inletPress), 'Q', 0, 'water') # kg / m^3
+rhoWater = 998 # kg/m^3
 print("Density of water", rhoWater)
 
 # Throat area
-Dt = 0.19 * inToM #(4 * At / numpy.pi) ** (1/2)
+Dt = 0.191 * inToM #(4 * At / numpy.pi) ** (1/2)
 At = (Dt / 2) ** 2 * numpy.pi
 massFlow = (At * (2 * rhoWater * (inletPress - vapPressWater)) ** (1/2)) * kgpersecToLbpersec
 
@@ -39,6 +39,14 @@ print("Throat diameter: ",Dt / inToM, "in")
 print("Mass flow rate: ", massFlow, "lb/s")
 
 # Code ouputs
-# Throat area:  0.02835287369864788 in^2
-# Throat diameter:  0.19 in
-# Mass flow rate:  1.197981623040666 lb/s
+# Throat area:  0.028652110398902312 in^2
+# Throat diameter:  0.191 in
+# Mass flow rate:  1.2106251410012892 lb/s
+
+
+
+
+
+
+
+
