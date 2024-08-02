@@ -63,12 +63,16 @@ def get_constants(gas, T0=T_STD, P0=P_STD):
     gamma = CP / CV
     choke = 1 / (2 / (gamma + 1)) ** (gamma / (gamma - 1))
     
+    R = 8.314 * u('J/mol/K') / mm_gas
+
+    Z = cp.PropsSI('Z', 'P', P0.m, 'T', T0.m, gas) * u('dimensionless')
+    # R *= Z
     T0.ito('kelvin')
     P0.ito('psi')
 
     return R, gamma, S_g, choke
 
-def scfm(acfm, P_act, T_act):
+def acfm_to_scfm(acfm, P_act, T_act):
     '''
     Converts acfm at the given pressure and temperature to scfm
 
@@ -77,30 +81,46 @@ def scfm(acfm, P_act, T_act):
 
     return (acfm * (P_act / P_STD) * (T_STD / T_act)).to('ft^3/min')
 
-def m_dot(acfm, P, T, gas):
+def mdot_to_scfm(mdot, gas):
+    R, gamma, S_g, choke = get_constants(gas, T_STD, P_STD)
+
+    return ((mdot * R * T_STD) / (P_STD)).to('ft^3/min')
+
+def scfm_to_mdot(scfm, gas):
+    R, gamma, S_g, choke = get_constants(gas, T_STD, P_STD)
+
+    return ((P_STD * scfm) / (R * T_STD)).to('kg/s')
+
+def acfm_to_mdot(acfm, P, T, gas):
     '''
     Converts a volumetric flow rate at a given pressure and temperature into mass flow rate
 
     Returns: Mass flow rate (kg/s)
     '''
 
-    R, gamma, S_g, choke = get_constants(gas)
-
+    R, gamma, S_g, choke = get_constants(gas, T, P)
     return ((P * acfm) / (R * T)).to('kg/s')
 
-def throat_calcs(m_dot, P, T, gas):
+def choked_flow_dim(m_dot, P0, T0, gas):
     '''
     Returns throat area and diameter for a choked flow in terms of m_dot at the given pressure and temperature. 
 
     Returns: Area (in^3), Diameter (in)
     '''
 
-    R, gamma, S_g, choke = get_constants(gas)
+    R, gamma, S_g, choke = get_constants(gas, T0, P0)
 
-    throat_area = ((m_dot * np.sqrt(T)) / (P * np.sqrt(gamma / R) * np.power(((gamma + 1) / 2), (-(gamma + 1)/(2 * (gamma - 1))))))
+    throat_area = ((m_dot * np.sqrt(T0)) / (P0 * np.sqrt(gamma / R) * np.power(((gamma + 1) / 2), (-(gamma + 1)/(2 * (gamma - 1))))))
     throat_dia = 2 * np.sqrt(throat_area / np.pi)
     return throat_area.to('in^2'), throat_dia.to('in')
-# endregion
+
+def choked_mdot(dia, P0, T0, gas):
+    R, gamma, S_g, choke = get_constants(gas, T0, P0)
+    A = np.pi / 4 * dia ** 2
+    
+    return ((A * P0) / np.sqrt(T0) * np.sqrt(gamma / R) * ((gamma + 1) / 2) ** -((gamma + 1) / (2 * (gamma - 1)))).to('kg/s')
+
+    # endregion
 
 # region Valves
 def c_v(scfm, P1, P2, T, gas):
@@ -113,44 +133,53 @@ def c_v(scfm, P1, P2, T, gas):
 
     R, gamma, S_g, choke = get_constants(gas, T, P1)
 
-    P1.ito_base_units()
-    T.ito_base_units()
-
-    if P1 < (choke * P2):
+    if P2 != 'Choked' and P1 < (choke * P2):
         # Sub-critical
-        C_v = ((scfm.to('ft^3/min').m) / (22.67 * P1.to('psi').m * (1 - (2 * (P2.to('psi').m - P1.to('psi').m) / (3 * P1.to('psi').m))) * (np.sqrt((P2.to('psi').m - P1.to('psi').m) / (P1.to('psi').m * S_g.to('dimensionless').m * T.to('rankine'))))))
+        C_v = ((scfm.to('ft^3/min').m) / (22.67 * P1.to('psi').m * (1 - (2 * (P1.to('psi').m - P2.to('psi').m) / (3 * P1.to('psi').m))) * (np.sqrt((P1.to('psi').m - P2.to('psi').m) / (P1.to('psi').m * S_g.to('dimensionless').m * T.to('rankine').m)))))
 
     else:
         C_v = (scfm.to('ft^3/min').m) / (0.471 * 22.67 * P1.to('psi').m * np.sqrt(1 / (S_g.to('dimensionless').m * T.to('rankine').m)))
     
-    # C_v = (scfm.to('ft^3/min').m * 2 * np.sqrt(S_g.m)) / P1.to('psi').m  # Note:units in psia and SCFM
     return C_v
 
-def valve_dP(c_v, scfm, P0, T, gas):
-    R, gamma, S_g, choke = get_constants(gas)
+def c_v_flow(Cv, P1, P2, T1, gas):
+    R, gamma, S_g, choke = get_constants(gas, T1, P1)
+    if P2 != 'Choked' and P1 < (choke * P2):
+        # Sub-critical
+        dP = P1 - P2
+        N2 = 22.67
+        q = N2 * Cv * P1.to('psi').m * (1 - (2 * dP.to('psi').m) / (3 * P1.to('psi').m)) * np.sqrt((dP.to('psi').m) / (P1.to('psi').m * S_g.to('dimensionless').m * T1.to('rankine').m))
+        q *= u('ft^3/min')
 
-    scfm.ito('ft^3/min')
-    P0.ito('psi')
-    S_g.ito('dimensionless')
-    T.ito('rankine')
+    else:
+        N2 = 22.67
+
+        q = 0.471 * N2 * Cv * P1.to('psi').m * np.sqrt(1 / (S_g.to('dimensionless').m * T1.to('rankine').m))
+        q *= u('ft^3/min')
+
+    return q
+
+def valve_dP(c_v, scfm, P0, T, gas):
+    R, gamma, S_g, choke = get_constants(gas, T, P0)
+    choked = False
+
     c_v = np.float64(c_v.m)
-    scfm = np.float64(scfm.m)
-    P0 = np.float64(P0.m)
-    T = np.float64(T.m)
+    scfm = np.float64(scfm.to('ft^3/min').m)
+    P0 = np.float64(P0.to('psi').m)
+    T = np.float64(T.to('rankine').m)
     N2 = 22.67
     eqn = lambda dP: -scfm + N2 * c_v * P0 * (1 - (2 * dP)/(3 * P0)) * np.sqrt((dP)/(P0 * S_g * T))
     dP = float(np.abs(fsolve(eqn, 0.001)[0])) * u('psi')
-
     P0 *= u('psi')
     c_v *= u('dimensionless')
 
     if P0 - dP < P0 * 1 / choke:
-        #print(1/choke)
-        print('FLOW MAY BE CHOKED IN VALVE!!!')
+        choked = True
+        # print("Choked!!")
         dP = P0 - (P0 * 1 / choke)
 
-    print(f'Pressure drop over valve of Cv {c_v.to("dimensionless"): ~P.2f}: {-dP.to("psi"): ~P.2f}')
-    return -dP
+    #print(f'Pressure drop over valve of Cv {c_v.to("dimensionless"): ~P.2f}: {-dP.to("psi"): ~P.2f}')
+    return -dP, choked
 # endregion
 
 # region COPV calcs
@@ -205,28 +234,28 @@ def T_isent_exp(T1, P1, P2, gas):
     Returns: Gas temperature (Kelvin)
     '''
     
-    R, gamma, S_g, choke = get_constants(gas)
+    R, gamma, S_g, choke = get_constants(gas, T1, P1)
 
     return (T1 * (P2 / P1)**(1 - 1 / gamma)).to('kelvin')
 
 # region Fanno Flow
-def isentropic_flow(T0, P0, m_dot, dia, gas_type):
+def isentropic_flow(T0, P0, m_dot, dia, gas):
     '''
     Calculates isentropic flow given required mass flow and stagnation conditions from T0 (stagnation, bottle), P0 to T1 and P1.
 
     Returns: T1, P1, T0, P0, M, a, v (Temperature post-expansion, pressure post-expansion, mach, speed of sound, velocity)
     '''
     area = np.pi * (dia / 2) ** 2  # Flow area (tube)
-    R, gamma, S_g, choke = get_constants(gas_type, T0, P0)  # Gas constants
+    R, gamma, S_g, choke = get_constants(gas, T0, P0)  # Gas constants
 
-    if gas_type == 'N2':
-        gas_type = 'Nitrogen'
-    elif gas_type == 'He':
-        gas_type = 'Helium'
-    elif gas_type == 'H2':
-        gas_type = 'Hydrogen'
+    if gas == 'N2':
+        gas = 'Nitrogen'
+    elif gas == 'He':
+        gas = 'Helium'
+    elif gas == 'H2':
+        gas = 'Hydrogen'
 
-    p0 = cp.PropsSI('D', 'P', P0.to_base_units().m, 'T', T0.to_base_units().m, gas_type) * u('kg/m^3')
+    p0 = cp.PropsSI('D', 'P', P0.to_base_units().m, 'T', T0.to_base_units().m, gas) * u('kg/m^3')
 
     m_dot.ito_base_units()
     area.ito_base_units()
@@ -302,7 +331,7 @@ def fanno_flow(T0, P0, T1, P1, M1, L, dia, gas_type):
 
     M2_fanno = M1_fanno - L_fanno
     M2 = mach_from_fanno(gamma, M2_fanno)
-    if M2 > 0.97: print('FLOW MAY BE CHOKED IN TUBE!!!')
+    #if M2 > 0.97: print('FLOW MAY BE CHOKED IN TUBE!!!')
 
     P01_P0star = 1 / M1 * ((2 / (gamma + 1)) * (1 + (gamma - 1) / 2 * M1 ** 2)) ** ((gamma + 1)/(2 * (gamma - 1)))
     P02_P0star = 1 / M2 * ((2 / (gamma + 1)) * (1 + (gamma - 1) / 2 * M2 ** 2)) ** ((gamma + 1)/(2 * (gamma - 1)))
@@ -321,15 +350,15 @@ def fanno_flow(T0, P0, T1, P1, M1, L, dia, gas_type):
     v = M2 * a
     v.ito('m/s')
 
-    print(f"Pressure drop over {L.to('ft'): ~P.2f} long section: {(P02-P0).to('psi'): ~P.2f}")
-    return T0.to('kelvin'), P02.to('psi'), T2.to('kelvin'), P2.to('psi'), M2.to('dimensionless'), a.to('ft/s'), v.to('ft/s')  
+    #print(f"Pressure drop over {L.to('ft'): ~P.2f} long section: {(P02-P0).to('psi'): ~P.2f}")
+    return T2.to('kelvin'), P2.to('psi'), T0.to('kelvin'), P02.to('psi'), M2.to('dimensionless'), a.to('ft/s'), v.to('ft/s')  
 
 def vel_ideal_gas(T, P, dia, m_dot, gas_type):
     '''
     Finds the velocity of an ideal gas using conservaiton of mass. Depreciated in favor of idsentropic model.
     '''
     area = np.pi * (dia / 2) ** 2
-    R, gamma, S_g, choke = get_constants(gas_type)
+    R, gamma, S_g, choke = get_constants(gas_type, T, P)
     '''
     print()
     print(f"getting ideal gas velocity for R={R}, T={T}, mdot={m_dot.to('kg/s')}, P={P.to('psi')}, area={area.to('in^2')}, gamma={gamma}")
@@ -367,7 +396,63 @@ def plot_copv():
     print(max_press)
     #plt.annotate(f"({max_press.to('psi'): ~P.2f}, {PMAX_COPV.to('psi'): ~P.2f})", (max_press, PMAX_COPV))
     plt.show()
+
+def plot_cv():
+    cv = [c_v(2370 * u('ft^3/min'), 6000 * u('psi'), i * u('psi'), 193.35213377632095 * u('K'), 'N2') for i in range(5500)]
+    P = [x for x in range(5500)]
+    plt.figure(1)
+    plt.plot(P, cv, label = 'C_v Value')
+    plt.xlabel('Downstream Pressure')
+    plt.ylabel('C_v Value')
+    plt.title('C_v Value as a function of downstream pressure')
+    plt.legend()
+    plt.show()
+
+
+def plot_cv_flow():
+    flow = [c_v_flow(1.3, 6000 * u('psi'), i * u('psi'), 298 * u('K'), 'N2').to('ft^3/min').m for i in range(6000)]
+    P = [x for x in range(6000)]
+    plt.figure(1)
+    plt.plot(flow, P, label = '6000 psi Inlet')
+    ax = plt.gca()
+    ax.set_xlim([0, 4000])
+    ax.set_ylim([0, 6000])
+    plt.xticks(np.arange(0, 4001, 400))
+    plt.yticks(np.arange(0, 6001, 750))
+    plt.grid()
+    plt.ylabel('OUTLET PRESSURE (psi)')
+    plt.xlabel('FLOW RATE (SCFM) Nitrogen')
+    plt.title('Flow Curve - Cv = 1.3 Tescom 26-1100 3/8" Orifice')
+    plt.legend()
+    plt.show()
 # endregion
+
+def check(station, mdot, dia, gas, Cv = False, valve_choked = False):
+    T = station[0]
+    P = station[1]
+    T0 = station[2]
+    P0 = station[3]
+    M = station[4]
+    a = station[5]
+    v = station[6]
+
+    message = ''
+
+    if choked_mdot(dia, P0, T0, gas) < mdot:
+        message += f"\nERROR: Flow mdot too low at choked condition for given diameter. "
+    
+    if Cv != False:
+        scfm = mdot_to_scfm(mdot, gas)
+        if c_v_flow(Cv, P0, "Choked", T0, gas) < scfm:
+            message += f"\nERROR: Valve/Regulator Cv too low at given condition; choked and will not allow further. "
+
+    if M >= 1:
+        message += f"\nERROR: Flow is choked at given condition. "
+
+    if valve_choked:
+        message += f"\nERROR: Valve/Regulator choked at given conditions. "
+
+    return message
 
 '''
 
