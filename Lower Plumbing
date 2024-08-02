@@ -1,0 +1,52 @@
+# In-house venturi test experiment 
+# This script sizes the throat area for a venturi to be flowed under a sink at zucrow. The sink has a 1/2" AN inlet. Discharge coefficient is not used in this equation
+# 
+
+import pint
+import numpy 
+from CoolProp import CoolProp as CP
+
+ureg = pint.UnitRegistry()
+Q = ureg.Quantity
+
+# Unit conversions 
+psiToPa = 6894.7572931783 # 1 psi is 6894.757 pascals 
+lbTokg= 0.453592 # 1 lb is 0.45392 kg
+inToM = 0.0254
+kgpersecToLbpersec = 2.205 # 1 kg/s is 2.205 lb/s
+
+# The pressure of the sink was measured to be 70 psi 
+inletPress = (Q(70, 'psi').to('Pa')).magnitude # pa
+
+# Mass Flow Rate of the sink 
+mdot = (Q(1, 'lb/s').to('kg/s')).magnitude # kg/s
+
+# Vapor pressure of water at atm
+vapPressWater = (Q(.2, 'psi').to('Pa')).magnitude # pascals 
+print("Vapor Pressur of Water", vapPressWater)
+
+# Density of water at the given inlet pressure
+rhoWater = 998 # kg/m^3
+print("Density of water", rhoWater)
+
+# Throat area
+Dt = 0.191 * inToM #(4 * At / numpy.pi) ** (1/2)
+At = (Dt / 2) ** 2 * numpy.pi
+massFlow = (At * (2 * rhoWater * (inletPress - vapPressWater)) ** (1/2)) * kgpersecToLbpersec
+
+print("Throat area: ", At / inToM ** 2, "in^2")
+print("Throat diameter: ",Dt / inToM, "in")
+print("Mass flow rate: ", massFlow, "lb/s")
+
+# Code ouputs
+# Throat area:  0.028652110398902312 in^2
+# Throat diameter:  0.191 in
+# Mass flow rate:  1.2106251410012892 lb/s
+
+
+
+
+
+
+
+
