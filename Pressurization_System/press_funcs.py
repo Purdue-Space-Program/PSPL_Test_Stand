@@ -32,11 +32,60 @@ def prop_vol_flow(prop, m_dot, P):
     Returns: Volumetric flow (ft^3/min)
     '''
 
-    rho = cp.PropsSI('D', 'P', P.to('Pa').m, 'Q', 0, prop) * u('kg/m^3')
-    T_sat = cp.PropsSI('T', 'P', P.to('Pa').m, 'Q', 0, prop) * u('kelvin')
+    if prop == 'Kerosene':
+        rho = 820.1 * u('kg/m^3')
+    elif prop == 'RP1':
+        rho = 810 * u('kg/m^3')
+    elif prop == 'Isopropanol':
+        rho = 785.027 * u('kg/m^3')
+    else:
+        rho = cp.PropsSI('D', 'P', P.to('Pa').m, 'Q', 0, prop) * u('kg/m^3')
+    # T_sat = cp.PropsSI('T', 'P', P.to('Pa').m, 'Q', 0, prop) * u('kelvin')
     v_dot = m_dot / rho  # Volumetric flow out of tank 
 
     return v_dot.to('ft^3/min')
+
+def prop_mdot_from_press_mdot(mdot_gas, P1, P2, T1, gas, prop, o_f):
+    T2 = T_isent_exp(T1, P1, P2, gas)
+
+    rho = cp.PropsSI('D', 'P', P2.to('Pa').m, 'T', T2.to('kelvin').m, gas) * u('kg/m^3')
+    vdot_total = mdot_gas / rho
+    # print(f"{vdot_total.to('ft^3/s'): ~P.4}")
+
+    if prop == 'Kerosene':
+        rho_fu = 820.1 * u('kg/m^3')
+    elif prop == 'RP1':
+        rho_fu = 810 * u('kg/m^3')
+    elif prop == 'Isopropanol':
+        rho_fu = 785.027 * u('kg/m^3')
+    else:
+        rho_fu = cp.PropsSI('D', 'P', P_STD.to('Pa').m, 'Q', 0, prop) * u('kg/m^3')
+
+    rho_lox = cp.PropsSI('D', 'P', P_STD.to('Pa').m, 'Q', 0, 'Oxygen') * u('kg/m^3')
+
+    vdot_fu = 0.0001 * u('ft^3/s')
+    mdot_lox = 0.000000001
+    mdot_fu = 0.0000001
+
+    while abs(o_f - mdot_lox / mdot_fu) > 0.01:
+        mdot_fu = vdot_fu * rho_fu
+
+        vdot_lox = vdot_total - vdot_fu
+        mdot_lox = vdot_lox * rho_lox
+
+        of_calc = mdot_lox / mdot_fu
+
+        if of_calc >= o_f:
+            vdot_fu = vdot_fu + 0.0001 * u('ft^3/s')
+        else:
+            vdot_fu = vdot_fu - 0.0001 * u('ft^3/s')
+
+
+    
+    print(mdot_fu.to('kg/s'), mdot_lox.to('kg/s'))
+    print((mdot_lox / mdot_fu).to('dimensionless'))
+
+    return mdot_fu, mdot_lox
 
 # region Compressible Gas Tools
 def get_constants(gas, T0=T_STD, P0=P_STD):
@@ -66,7 +115,8 @@ def get_constants(gas, T0=T_STD, P0=P_STD):
     R = 8.314 * u('J/mol/K') / mm_gas
 
     Z = cp.PropsSI('Z', 'P', P0.m, 'T', T0.m, gas) * u('dimensionless')
-    # R *= Z
+    # print("Specific heat ratio for ", gas, ": ", gamma)
+    R *= Z
     T0.ito('kelvin')
     P0.ito('psi')
 
@@ -101,6 +151,8 @@ def acfm_to_mdot(acfm, P, T, gas):
     R, gamma, S_g, choke = get_constants(gas, T, P)
     return ((P * acfm) / (R * T)).to('kg/s')
 
+#def vdot_out_scfm_in(acfm_out, P1, P2, T1)
+
 def choked_flow_dim(m_dot, P0, T0, gas):
     '''
     Returns throat area and diameter for a choked flow in terms of m_dot at the given pressure and temperature. 
@@ -121,6 +173,35 @@ def choked_mdot(dia, P0, T0, gas):
     return ((A * P0) / np.sqrt(T0) * np.sqrt(gamma / R) * ((gamma + 1) / 2) ** -((gamma + 1) / (2 * (gamma - 1)))).to('kg/s')
 
     # endregion
+
+def total_pressure(P, T, dia_vent, dia_tube, gas):
+    mdot0 = choked_mdot(dia_vent, P, T, gas)
+    V0 = flow_to_vel(mdot0, dia_tube, P, T, gas)
+    rho = cp.PropsSI('D', 'P', P.to_base_units().m, 'T', T.to_base_units().m, gas) * u('kg/m^3')
+    P_t = P + 0.5 * rho * V0 ** 2
+
+    for i in range(5):
+        mdot = choked_mdot(dia_vent, P_t, T, gas)
+        V = flow_to_vel(mdot, dia_tube, P, T, gas)
+        rho = cp.PropsSI('D', 'P', P.to_base_units().m, 'T', T.to_base_units().m, gas) * u('kg/m^3')
+        P_t = P + 0.5 * rho * V ** 2
+        #print(f"Iteration {i}, P_t = {P_t: ~P.4f}")
+    
+    R, gamma, S_g, choke = get_constants(gas, T, P_t)
+    a = np.sqrt(gamma * R * T)
+    print(f"Velocity: {V.to('ft/s'): ~P.4f}")
+    print(f"Mach: {(V / a).to('dimensionless'): ~P.4f}")
+    print(f"Static Pressure: {(P).to('psi'): ~P.4f}")
+    print(f"Dynamic Pressure: {(0.5 * rho * V0 ** 2).to('psi'): ~P.4f}")
+    print(f"Total Pressure: {(P_t).to('psi'): ~P.4f}")
+    print(f"Calculated Mass Flow: {mdot.to('lb/s'): ~P.4f}")
+    
+    return P_t
+
+def flow_to_vel(mdot, dia, P, T, gas):
+    rho = cp.PropsSI('D', 'P', P.to_base_units().m, 'T', T.to_base_units().m, gas) * u('kg/m^3')
+
+    return mdot / (rho * np.pi * (dia / 2) ** 2)
 
 # region Valves
 def c_v(scfm, P1, P2, T, gas):
@@ -183,7 +264,7 @@ def valve_dP(c_v, scfm, P0, T, gas):
 # endregion
 
 # region COPV calcs
-def copv_init_press(P_tank, V_tank, V_copv, gas):
+def copv_init_press(P_tank_fu, P_tank_lox, V_tank_fu, V_tank_lox, V_copv, gas):
     '''
     Calculates the initial pressure required to pressurize tanks to a given pressure throughout the burn cycle while keeping flow choked.
 
@@ -191,20 +272,23 @@ def copv_init_press(P_tank, V_tank, V_copv, gas):
     '''
 
     R, gamma, S_g, choke = get_constants(gas)
-
-    P_choke = P_tank * choke
+    P_choke = max(P_tank_fu * choke, P_tank_lox * choke)
     P_copv = 6000 * u('psi')
 
     for i in range(30):
-        v_1_copv = V_tank * (P_tank / P_copv)**(1 / gamma)
-        m_press = (P_copv * v_1_copv) / (R * T_STD)
+        v_1_copv_fu = V_tank_fu * (P_tank_fu / P_copv)**(1 / gamma)
+        m_press_fu = (P_copv * v_1_copv_fu) / (R * T_STD)
+
+        v_1_copv_lox = V_tank_lox * (P_tank_lox / P_copv)**(1 / gamma)
+        m_press_lox = (P_copv * v_1_copv_lox) / (R * T_STD)
 
         m_copv_postburn = (P_choke * V_copv) / (R * T_STD)
 
-        m_total = (m_copv_postburn + m_press * 2)
+        m_total = (m_copv_postburn + m_press_fu + m_press_lox)
         P_copv_init = (m_total * R * T_STD) / V_copv
 
         P_copv = P_copv_init.to('psi')
+        print(P_copv)
 
     return P_copv.to('psi')
 
@@ -226,7 +310,12 @@ def copv_max_tank_press(P_max_copv, V_tank, V_copv, gas):
         else:
             return max_press.to('psi')
 # endregion
-   
+
+def reqd_volume(T1, P1, P2, V2, gas):
+    T2 = T_isent_exp(T1, P1, P2, gas)
+
+    return P2 * V2 / T2 * T1 / P1
+
 def T_isent_exp(T1, P1, P2, gas):
     '''
     Calculates gas temperature following isentropic expansion (T2) from P1, T1 to P2, T2 
@@ -439,14 +528,14 @@ def check(station, mdot, dia, gas, Cv = False, valve_choked = False):
     message = ''
 
     if choked_mdot(dia, P0, T0, gas) < mdot:
-        message += f"\nERROR: Flow mdot too low at choked condition for given diameter. "
+        message += f"\nERROR: Flow mdot too low at choked condition for given diameter. Choked: {P0: ~P.4f}, {T0: ~P.4f}, {gas}, {choked_mdot(dia, P0, T0, gas): ~P.4f}, Actual: {mdot: ~P.4f}"
     
     if Cv != False:
         scfm = mdot_to_scfm(mdot, gas)
         if c_v_flow(Cv, P0, "Choked", T0, gas) < scfm:
             message += f"\nERROR: Valve/Regulator Cv too low at given condition; choked and will not allow further. "
 
-    if M >= 1:
+    if M >= 0.995:
         message += f"\nERROR: Flow is choked at given condition. "
 
     if valve_choked:
