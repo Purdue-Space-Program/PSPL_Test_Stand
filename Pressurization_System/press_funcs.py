@@ -63,9 +63,9 @@ def prop_mdot_from_press_mdot(mdot_gas, P1, P2, T1, gas, prop, o_f):
 
     rho_lox = cp.PropsSI('D', 'P', P_STD.to('Pa').m, 'Q', 0, 'Oxygen') * u('kg/m^3')
 
-    vdot_fu = 0.0001 * u('ft^3/s')
-    mdot_lox = 0.000000001
-    mdot_fu = 0.0000001
+    vdot_fu = 0.000000001 * u('ft^3/s')
+    mdot_lox = 0.0000000001
+    mdot_fu = 0.0000000001
 
     while abs(o_f - mdot_lox / mdot_fu) > 0.01:
         mdot_fu = vdot_fu * rho_fu
@@ -76,14 +76,14 @@ def prop_mdot_from_press_mdot(mdot_gas, P1, P2, T1, gas, prop, o_f):
         of_calc = mdot_lox / mdot_fu
 
         if of_calc >= o_f:
-            vdot_fu = vdot_fu + 0.0001 * u('ft^3/s')
+            vdot_fu = vdot_fu + 0.00001 * u('ft^3/s')
         else:
-            vdot_fu = vdot_fu - 0.0001 * u('ft^3/s')
+            vdot_fu = vdot_fu - 0.00001 * u('ft^3/s')
 
-
+        #print(abs(o_f - mdot_lox / mdot_fu))
     
-    print(mdot_fu.to('kg/s'), mdot_lox.to('kg/s'))
-    print((mdot_lox / mdot_fu).to('dimensionless'))
+    #print(mdot_fu.to('kg/s'), mdot_lox.to('kg/s'))
+    #print((mdot_lox / mdot_fu).to('dimensionless'))
 
     return mdot_fu, mdot_lox
 
@@ -192,11 +192,11 @@ def total_pressure(P, T, dia_vent, dia_tube, gas):
     print(f"Velocity: {V.to('ft/s'): ~P.4f}")
     print(f"Mach: {(V / a).to('dimensionless'): ~P.4f}")
     print(f"Static Pressure: {(P).to('psi'): ~P.4f}")
-    print(f"Dynamic Pressure: {(0.5 * rho * V0 ** 2).to('psi'): ~P.4f}")
+    print(f"Dynamic Pressure: {(0.5 * rho * V ** 2).to('psi'): ~P.4f}")
     print(f"Total Pressure: {(P_t).to('psi'): ~P.4f}")
     print(f"Calculated Mass Flow: {mdot.to('lb/s'): ~P.4f}")
     
-    return P_t
+    return V.to('ft/s'), (V / a).to('dimensionless'), (P).to('psi'), (0.5 * rho * V ** 2).to('psi'), (P_t).to('psi'), mdot.to('lb/s')
 
 def flow_to_vel(mdot, dia, P, T, gas):
     rho = cp.PropsSI('D', 'P', P.to_base_units().m, 'T', T.to_base_units().m, gas) * u('kg/m^3')
@@ -214,7 +214,11 @@ def c_v(scfm, P1, P2, T, gas):
 
     R, gamma, S_g, choke = get_constants(gas, T, P1)
 
-    if P2 != 'Choked' and P1 < (choke * P2):
+    print("--------------------------------------------------------------------")
+    if P2 == 'choked':
+        P1 = choke * P2 + 5
+
+    if P1 < (choke * P2):
         # Sub-critical
         C_v = ((scfm.to('ft^3/min').m) / (22.67 * P1.to('psi').m * (1 - (2 * (P1.to('psi').m - P2.to('psi').m) / (3 * P1.to('psi').m))) * (np.sqrt((P1.to('psi').m - P2.to('psi').m) / (P1.to('psi').m * S_g.to('dimensionless').m * T.to('rankine').m)))))
 
@@ -225,7 +229,10 @@ def c_v(scfm, P1, P2, T, gas):
 
 def c_v_flow(Cv, P1, P2, T1, gas):
     R, gamma, S_g, choke = get_constants(gas, T1, P1)
-    if P2 != 'Choked' and P1 < (choke * P2):
+    if P2 == 'Choked':
+        P2 = (1/choke) * P1
+
+    if P1 < (choke * P2):
         # Sub-critical
         dP = P1 - P2
         N2 = 22.67

@@ -5,7 +5,7 @@ u = UnitRegistry()
 Q_ = u.Quantity
 from press_funcs import *
 
-file = pd.read_excel("Press System Test Cases.xlsx", 0)
+file = pd.read_excel("C:/Users/brigh/OneDrive - purdue.edu/PSP/Test Stand/PSPL_Test_Stand/Pressurization_System/Press System Test Cases.xlsx", 0)
 with pd.ExcelWriter('Press System Test Case Outputs.xlsx', engine='openpyxl', mode='w') as writer:
     pd.DataFrame([]).to_excel(writer)
 
@@ -39,7 +39,7 @@ for test_num in range(len(file)):
     T_TANK_FU = T_isent_exp(T_STD, P_SOURCE_FU, P_TANK_FU, GAS_TYPE_FU)
 
     config_num = file.loc[test_num, "Configuration No."]
-    configuration = pd.read_excel("Press System Test Cases.xlsx", config_num)
+    configuration = pd.read_excel("C:/Users/brigh/OneDrive - purdue.edu/PSP/Test Stand/PSPL_Test_Stand/Pressurization_System/Press System Test Cases.xlsx", config_num)
 
     # FUEL CIRCUIT
     # Mass flow calculations
@@ -75,6 +75,7 @@ for test_num in range(len(file)):
             gas_type = GAS_TYPE_LOX
             stations.append([0 * u('dimensionless')])
             station += 1
+            errors.append('')
             dia = configuration.loc[component + 1, "Diameter (in)"] * u('in')
             [T, P, T0, P0, M, a, v] = isentropic_flow(T_SOURCE_LOX, P_SOURCE_LOX, mdot, dia, gas_type)
 
@@ -82,6 +83,7 @@ for test_num in range(len(file)):
             mdot = mdot_gas_fu
             stations.append([1 * u('dimensionless')])
             station += 1
+            errors.append('')
             dia = configuration.loc[component + 1, "Diameter (in)"] * u('in')
             if combined:
                 gas_type = GAS_TYPE_LOX
@@ -101,6 +103,7 @@ for test_num in range(len(file)):
             mdot = mdot_gas_lox
             stations.append([2 * u('dimensionless')])
             station += 1
+            errors.append('')
             dia = configuration.loc[component + 1, "Diameter (in)"] * u('in')
             if combined:
                 if flowpath == "Combined":  # Exiting combined section
@@ -160,12 +163,19 @@ for test_num in range(len(file)):
             dP_list.append([f'{configuration.loc[component, "Component"]}, stations {station-1}-{station}:', dP[0]])
 
         else:
-            print('INVALID COMPONENT')
+            invalid = configuration.loc[component, "Component"]
+            print('INVALID COMPONENT' + f'{invalid}')
             #stations.append("INVALID COMPONENT")
 
     info = [[mdot_gas_lox, mdot_gas_fu],
             [scfm_lox, scfm_fu],
             [Cv_lox, Cv_fu]]
+
+    print("m_dot (lox, fu):", f"{mdot_gas_lox.to('kg/s'): ~P.4f},       " f"{mdot_gas_fu.to('kg/s'): ~P.4f}")
+    print("SCFM (lox, fu): ", f"{scfm_lox: ~P.4f},  " f"{scfm_fu: ~P.4f}")
+    print("Area (lox, fu): ", f"{throat_area_lox: ~P.4f},        ", f"{throat_area_fu: ~P.4f}")
+    print("Dia (lox, fu):  ", f"{throat_dia_lox: ~P.4f},         ", f"{throat_dia_fu: ~P.4f}")
+    print("C_v (lox, fu):  ", f"{Cv_lox: <.4f},            ", f"{Cv_fu: <.4f}")
 
     print(throat_dia_fu, throat_dia_lox)
     stations = [[f"{elem: ~P.4f}" for elem in row] for row in stations]
