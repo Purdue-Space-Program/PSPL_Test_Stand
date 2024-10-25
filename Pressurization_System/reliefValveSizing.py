@@ -10,6 +10,12 @@ from CoolProp.CoolProp import PropsSI
 import math as m
 
 ## ------------------------ FUNCTIONS ------------------------
+# Calculate isentropic temperature due to isentropic expansion
+def calcIsentropicExpansion(pressure1, pressure2, tankTemperature):
+    gamma = calcGamma(tankTemperature, pressure1, working_fluid) # [unitless], ratio of specific heats
+
+    return tankTemperature * ((pressure2 / pressure1) ** (1 - (1 / gamma))) # [K], temperature after isentropic expansion
+
 # Calculate gamma at a given pressure and temp, return float
 def calcGamma(upstream_T, upstream_P, working_fluid):
     c_p = PropsSI('Cpmass', 'T', upstream_T.magnitude, 'P', upstream_P.to(units.pascal).magnitude, working_fluid) * (units.joule / (units.kilogram * units.kelvin)) # [J/(kg*K)]
@@ -34,10 +40,12 @@ def checkChokedFlow(upstream_P, downstream_P, gamma):
         return False
 
 # Calculate the Volumetric flow rate through the Regulator, return float
-def calcVolumetricFlow(constant_N2, cv, upstream_P, downstream_P, SG, upstream_T, working_fluid):
+def calcVolumetricFlow(constant_N2, cv, upstream_P, downstream_P, upstream_T, working_fluid, ambient_pressure, ambient_temp, reference_fluid):
     gamma = calcGamma(upstream_T, upstream_P, working_fluid) # [unitless], ratio of specific heats
     choked = checkChokedFlow(upstream_P, downstream_P, gamma) # [unitless]; boolean, stores whether flow is choked or not
-    
+    SG = calcSpecificGravity(upstream_T, upstream_P, working_fluid, ambient_temp, ambient_pressure, reference_fluid) # [unitless]
+
+
     delta_P = upstream_P - downstream_P # [psi], difference in pressure
     upstream_T = upstream_T.to(units.rankine) # [Ranking], formula calls for rankine temperature (Swagelok)
 
@@ -49,10 +57,11 @@ def calcVolumetricFlow(constant_N2, cv, upstream_P, downstream_P, SG, upstream_T
     return Q # [ft^3/min], volumetric flow rate
 
 # Calculate the needed Cv for a valve
-def calcValveCv(constant_N2, Q, upstream_P, downstream_P, SG, upstream_T, working_fluid):
+def calcValveCv(constant_N2, Q, upstream_P, downstream_P, upstream_T, working_fluid, ambient_pressure, ambient_temp, reference_fluid):
     gamma = calcGamma(upstream_T, upstream_P, working_fluid) # [unitless], ratio of specific heats
     choked = checkChokedFlow(upstream_P, downstream_P, gamma) # [unitless]; boolean, stores whether flow is choked or not
-    
+    SG = calcSpecificGravity(upstream_T, upstream_P, working_fluid, ambient_temp, ambient_pressure, reference_fluid) # [unitless]
+
     delta_P = upstream_P - downstream_P # [psi], difference in pressure
     upstream_T = upstream_T.to(units.rankine) # [Ranking], formula calls for rankine temperature (Swagelok)
 
@@ -87,9 +96,9 @@ tankTemp_N2 = 250 * (units.kelvin) # [K], estimate - need to revise; note that t
 constant_N2 = 22.67 * units.dimensionless # [unitless], constant for calculating the proper units; per Swagelok Valve Sizing
 
 ## ------------------------ CALCULATIONS ------------------------
-specificGravity_N2 = calcSpecificGravity(tankTemp_N2, tank_pressure, working_fluid, ambient_temp, ambient_pressure, reference_fluid) # [unitless]
-volumetricFlow = (calcVolumetricFlow(constant_N2, regulator_cv, tank_pressure, ambient_pressure, specificGravity_N2, tankTemp_N2, working_fluid)).magnitude * ((units.foot ** 3) / (units.minute)) # [ft^3/min]
-valve_cv = calcValveCv(constant_N2, volumetricFlow, relief_pressure, ambient_pressure, specificGravity_N2, tankTemp_N2, working_fluid) # [unitless]
+volumetricFlow = (calcVolumetricFlow(constant_N2, regulator_cv, tank_pressure, ambient_pressure, tankTemp_N2, working_fluid, ambient_pressure, ambient_temp, reference_fluid)).magnitude * ((units.foot ** 3) / (units.minute)) # [ft^3/min]
+relief_temp = calcIsentropicExpansion(tank_pressure, relief_pressure, tankTemp_N2)
+valve_cv = calcValveCv(constant_N2, volumetricFlow, relief_pressure, ambient_pressure, relief_temp, working_fluid, ambient_pressure, ambient_temp, reference_fluid) # [unitless]
 
 ## ------------------------ OUTPUT ------------------------
 print("Volumetric flow: " + str(volumetricFlow))
