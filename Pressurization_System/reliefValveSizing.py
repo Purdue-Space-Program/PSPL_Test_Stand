@@ -25,7 +25,7 @@ def calcGamma(upstream_T, upstream_P, working_fluid):
 
 # Get specific volume, return float
 def calcSpecificGravity(working_T, working_P, working_fluid, ref_T, ref_P, ref_fluid):
-    density_N2 = PropsSI("D", "T", working_T.magnitude, "P", (working_P.to(units.pascal)).magnitude, working_fluid) # [kg/m^3]
+    density_N2 = PropsSI("D", "T", ref_T.magnitude, "P", (ref_P.to(units.pascal)).magnitude, working_fluid) # [kg/m^3]
     density_water = PropsSI("D", "T", ref_T.magnitude, "P", (ref_P.to(units.pascal)).magnitude, ref_fluid) # [kg/m^3]
 
     return (density_N2 / density_water) # [unitless], density of gas over density of reference fluid, in this case (for gases) air is used
@@ -47,8 +47,8 @@ def calcVolumetricFlow(constant_N2, cv, upstream_P, downstream_P, upstream_T, wo
 
 
     delta_P = upstream_P - downstream_P # [psi], difference in pressure
-    upstream_T = upstream_T.to(units.rankine) # [Ranking], formula calls for rankine temperature (Swagelok)
-
+    upstream_T = upstream_T.to(units.rankine) # [Rankine], formula calls for rankine temperature (Swagelok)
+    print(upstream_P, constant_N2, SG, upstream_T)
     if (not choked):
         Q = constant_N2 * cv * upstream_P * (1 - ((2 * delta_P) / (3 * upstream_P))) * ((delta_P / (upstream_P * SG * upstream_T)) ** (1/2)) # [ft^3/min], volumetric flow rate
     else:
@@ -57,7 +57,7 @@ def calcVolumetricFlow(constant_N2, cv, upstream_P, downstream_P, upstream_T, wo
     return Q # [ft^3/min], volumetric flow rate
 
 # Calculate the needed Cv for a valve
-def calcValveCv(constant_N2, Q, upstream_P, downstream_P, upstream_T, working_fluid, ambient_pressure, ambient_temp, reference_fluid):
+def calcFlowCoefficient(constant_N2, Q, upstream_P, downstream_P, upstream_T, working_fluid, ambient_pressure, ambient_temp, reference_fluid):
     gamma = calcGamma(upstream_T, upstream_P, working_fluid) # [unitless], ratio of specific heats
     choked = checkChokedFlow(upstream_P, downstream_P, gamma) # [unitless]; boolean, stores whether flow is choked or not
     SG = calcSpecificGravity(upstream_T, upstream_P, working_fluid, ambient_temp, ambient_pressure, reference_fluid) # [unitless]
@@ -98,7 +98,7 @@ constant_N2 = 22.67 * units.dimensionless # [unitless], constant for calculating
 ## ------------------------ CALCULATIONS ------------------------
 volumetricFlow = (calcVolumetricFlow(constant_N2, regulator_cv, tank_pressure, ambient_pressure, tankTemp_N2, working_fluid, ambient_pressure, ambient_temp, reference_fluid)).magnitude * ((units.foot ** 3) / (units.minute)) # [ft^3/min]
 relief_temp = calcIsentropicExpansion(tank_pressure, relief_pressure, tankTemp_N2)
-valve_cv = calcValveCv(constant_N2, volumetricFlow, relief_pressure, ambient_pressure, relief_temp, working_fluid, ambient_pressure, ambient_temp, reference_fluid) # [unitless]
+valve_cv = calcFlowCoefficient(constant_N2, volumetricFlow, relief_pressure, ambient_pressure, relief_temp, working_fluid, ambient_pressure, ambient_temp, reference_fluid) # [unitless]
 
 ## ------------------------ OUTPUT ------------------------
 print("Volumetric flow: " + str(volumetricFlow))
