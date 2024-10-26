@@ -18,6 +18,8 @@ def calcIsentropicExpansion(pressure1, pressure2, tankTemperature):
 
 # Calculate gamma at a given pressure and temp, return float
 def calcGamma(upstream_T, upstream_P, working_fluid):
+    upstream_P.ito_base_units()
+    upstream_T.ito_base_units()
     c_p = PropsSI('Cpmass', 'T', upstream_T.magnitude, 'P', upstream_P.to(units.pascal).magnitude, working_fluid) * (units.joule / (units.kilogram * units.kelvin)) # [J/(kg*K)]
     c_v = PropsSI('Cvmass', 'T', upstream_T.magnitude, 'P', upstream_P.to(units.pascal).magnitude, working_fluid) * (units.joule / (units.kilogram * units.kelvin)) # [J/(kg*K)] 
     
@@ -45,9 +47,10 @@ def calcVolumetricFlow(constant_N2, cv, upstream_P, downstream_P, upstream_T, wo
     choked = checkChokedFlow(upstream_P, downstream_P, gamma) # [unitless]; boolean, stores whether flow is choked or not
     SG = calcSpecificGravity(upstream_T, upstream_P, working_fluid, ambient_temp, ambient_pressure, reference_fluid) # [unitless]
 
-
+    upstream_P.ito('psi')
+    downstream_P.ito('psi')
     delta_P = upstream_P - downstream_P # [psi], difference in pressure
-    upstream_T = upstream_T.to(units.rankine) # [Rankine], formula calls for rankine temperature (Swagelok)
+    upstream_T.ito(units.rankine) # [Rankine], formula calls for rankine temperature (Swagelok)
     print(upstream_P, constant_N2, SG, upstream_T)
     if (not choked):
         Q = constant_N2 * cv * upstream_P * (1 - ((2 * delta_P) / (3 * upstream_P))) * ((delta_P / (upstream_P * SG * upstream_T)) ** (1/2)) # [ft^3/min], volumetric flow rate
@@ -62,14 +65,16 @@ def calcFlowCoefficient(constant_N2, Q, upstream_P, downstream_P, upstream_T, wo
     choked = checkChokedFlow(upstream_P, downstream_P, gamma) # [unitless]; boolean, stores whether flow is choked or not
     SG = calcSpecificGravity(upstream_T, upstream_P, working_fluid, ambient_temp, ambient_pressure, reference_fluid) # [unitless]
 
+    upstream_P.ito('psi')
+    downstream_P.ito('psi')
     delta_P = upstream_P - downstream_P # [psi], difference in pressure
-    upstream_T = upstream_T.to(units.rankine) # [Ranking], formula calls for rankine temperature (Swagelok)
+    upstream_T.ito(units.rankine) # [Rankine], formula calls for rankine temperature (Swagelok)
 
     if (not choked):
         cv = Q / (constant_N2 * upstream_P * (1 - ((2 * delta_P) / (3 * upstream_P))) * ((delta_P / (upstream_P * SG * upstream_T)) ** (1/2))) # [unitless], flow coefficient
     else:
         cv = Q / (0.471 * constant_N2 * upstream_P * ((1 / (SG * upstream_T)) ** (1/2))) # [unitless], flow coefficient
-
+    print(upstream_P, downstream_P, Q, upstream_T, SG)
     return cv # [unitless], flow coefficient
 
 ## ------------------------ DEFINE UNITS ------------------------
@@ -86,11 +91,11 @@ reference_fluid = "air" # for calculating specific volume
 # Pressures
 relief_pressure = 1500 * (units.lbf / (units.inch ** 2)) # [psi]
 tank_pressure = 6000 * (units.lbf / (units.inch ** 2)) # [psi]
-ambient_pressure = 14.7 * (units.lbf / (units.inch ** 2)) # [psi]
+ambient_pressure = 14.6960 * (units.lbf / (units.inch ** 2)) # [psi]
 
 # Temperatures
-ambient_temp = 298.15 * (units.kelvin) # [K]
-tankTemp_N2 = 250 * (units.kelvin) # [K], estimate - need to revise; note that the Zucrow tank volume is 250 cubic feet
+ambient_temp = 298.7056 * (units.kelvin) # [K]
+tankTemp_N2 = ambient_temp # [K], estimate - need to revise; note that the Zucrow tank volume is 250 cubic feet
 
 # Constants
 constant_N2 = 22.67 * units.dimensionless # [unitless], constant for calculating the proper units; per Swagelok Valve Sizing

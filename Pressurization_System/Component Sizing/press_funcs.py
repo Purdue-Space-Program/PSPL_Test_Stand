@@ -225,6 +225,7 @@ def c_v(scfm, P1, P2, T, gas):
     else:
         C_v = (scfm.to('ft^3/min').m) / (0.471 * 22.67 * P1.to('psi').m * np.sqrt(1 / (S_g.to('dimensionless').m * T.to('rankine').m)))
     
+    print(P1, P2, scfm, T, S_g)
     return C_v
 
 def c_v_flow(Cv, P1, P2, T1, gas):
