@@ -41,7 +41,7 @@ while abs(total_mdot.to('lb/s').m - regflow.to('lb/s').m) > 0.00001:
     regflow = scfm_to_mdot(flow_in, "Nitrogen")
     print(source)
 
-t_tank = T_isent_exp(288 * u('kelvin'), source, tank_P, gas)
+t_tank = 288 * u('kelvin')
 mdot_out = scfm_to_mdot(flow_in, gas)
 area, dia = choked_flow_dim(mdot_out, tank_P, t_tank, gas)
 
@@ -50,3 +50,4 @@ c_v_out = c_v(flow_in, tank_P, 14.7 * u('psi'), t_tank, gas) * u('dimensionless'
 print(f"SCFM in: {flow_in: ~P.4f}, Required Cv out: {c_v_out: ~P.4f}, Required mdot out: {mdot_out.to('lb/s'): ~P.4f}, Required diameter out: {dia: ~P.4f}, area: {area: ~P.4f}")
 print(f"Gas temp in tank: {t_tank: ~P.4f}")
 print("mdot for 0.25\" orifice:", f"{choked_mdot(0.25 * u('in'), tank_P, t_tank, gas): ~P.4f}")
+print(cp.PropsSI('T', 'P', (20*u('psi')).to('Pa').m, 'Q', 0, "Nitrogen"))
