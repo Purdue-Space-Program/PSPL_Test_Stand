@@ -51,7 +51,7 @@ def calcVolumetricFlow(constant_N2, cv, upstream_P, downstream_P, upstream_T, wo
     downstream_P.ito('psi')
     delta_P = upstream_P - downstream_P # [psi], difference in pressure
     upstream_T.ito(units.rankine) # [Rankine], formula calls for rankine temperature (Swagelok)
-    print(upstream_P, constant_N2, SG, upstream_T)
+    #print(upstream_P, constant_N2, SG, upstream_T)
     if (not choked):
         Q = constant_N2 * cv * upstream_P * (1 - ((2 * delta_P) / (3 * upstream_P))) * ((delta_P / (upstream_P * SG * upstream_T)) ** (1/2)) # [ft^3/min], volumetric flow rate
     else:
@@ -67,6 +67,7 @@ def calcFlowCoefficient(constant_N2, Q, upstream_P, downstream_P, upstream_T, wo
 
     upstream_P.ito('psi')
     downstream_P.ito('psi')
+    Q.ito('ft^3/min')
     delta_P = upstream_P - downstream_P # [psi], difference in pressure
     upstream_T.ito(units.rankine) # [Rankine], formula calls for rankine temperature (Swagelok)
 
@@ -74,7 +75,7 @@ def calcFlowCoefficient(constant_N2, Q, upstream_P, downstream_P, upstream_T, wo
         cv = Q / (constant_N2 * upstream_P * (1 - ((2 * delta_P) / (3 * upstream_P))) * ((delta_P / (upstream_P * SG * upstream_T)) ** (1/2))) # [unitless], flow coefficient
     else:
         cv = Q / (0.471 * constant_N2 * upstream_P * ((1 / (SG * upstream_T)) ** (1/2))) # [unitless], flow coefficient
-    print(upstream_P, downstream_P, Q, upstream_T, SG)
+
     return cv # [unitless], flow coefficient
 
 ## ------------------------ DEFINE UNITS ------------------------
@@ -94,7 +95,7 @@ tank_pressure = 6000 * (units.lbf / (units.inch ** 2)) # [psi]
 ambient_pressure = 14.6960 * (units.lbf / (units.inch ** 2)) # [psi]
 
 # Temperatures
-ambient_temp = 298.7056 * (units.kelvin) # [K]
+ambient_temp = 288.7056 * (units.kelvin) # [K]
 tankTemp_N2 = ambient_temp # [K], estimate - need to revise; note that the Zucrow tank volume is 250 cubic feet
 
 # Constants
@@ -103,6 +104,7 @@ constant_N2 = 22.67 * units.dimensionless # [unitless], constant for calculating
 ## ------------------------ CALCULATIONS ------------------------
 volumetricFlow = (calcVolumetricFlow(constant_N2, regulator_cv, tank_pressure, ambient_pressure, tankTemp_N2, working_fluid, ambient_pressure, ambient_temp, reference_fluid)).magnitude * ((units.foot ** 3) / (units.minute)) # [ft^3/min]
 relief_temp = calcIsentropicExpansion(tank_pressure, relief_pressure, tankTemp_N2)
+relief_temp = ambient_temp
 valve_cv = calcFlowCoefficient(constant_N2, volumetricFlow, relief_pressure, ambient_pressure, relief_temp, working_fluid, ambient_pressure, ambient_temp, reference_fluid) # [unitless]
 
 ## ------------------------ OUTPUT ------------------------

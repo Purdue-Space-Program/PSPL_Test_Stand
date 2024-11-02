@@ -40,6 +40,7 @@ def prop_vol_flow(prop, m_dot, P):
         rho = 785.027 * u('kg/m^3')
     else:
         rho = cp.PropsSI('D', 'P', P.to('Pa').m, 'Q', 0, prop) * u('kg/m^3')
+        print(rho)
     # T_sat = cp.PropsSI('T', 'P', P.to('Pa').m, 'Q', 0, prop) * u('kelvin')
     v_dot = m_dot / rho  # Volumetric flow out of tank 
 
@@ -224,8 +225,6 @@ def c_v(scfm, P1, P2, T, gas):
 
     else:
         C_v = (scfm.to('ft^3/min').m) / (0.471 * 22.67 * P1.to('psi').m * np.sqrt(1 / (S_g.to('dimensionless').m * T.to('rankine').m)))
-    
-    print(P1, P2, scfm, T, S_g)
     return C_v
 
 def c_v_flow(Cv, P1, P2, T1, gas):
@@ -550,140 +549,3 @@ def check(station, mdot, dia, gas, Cv = False, valve_choked = False):
         message += f"\nERROR: Valve/Regulator choked at given conditions. "
 
     return message
-
-'''
-
-# region Main Test
-def run_test(P_tank, P_bottle, V_bottle, tube_dia, gas_type):
-    ''''''
-    Inputs: P_tank, P_bottle, V_bottle, gas_type
-
-    Outputs: m_dot, SCFM, Area, Diameter, C_v
-    ''''''
-    
-    # Oxidizer
-    OX = 'Oxygen'
-    MDOT_LOX = 8 * u('kg/s')  # LOX mass flow out of tank
-
-    # Fuel
-    FU = 'Methane'
-    MDOT_FU = 3 * u('kg/s')  # Methane mass flow out of tank 
-
-    # Press Gas
-    GAS_TYPE = gas_type
-
-    # Bottle Test Case
-    # Change These
-    P_TANK = P_tank  # Prop tank pressure
-    P_bottle = P_bottle
-    V_bottle = V_bottle
-
-    # Leave these
-    T_COPV = T_STD
-    T_TANK = T_isent_exp(T_STD, P_bottle, P_TANK, GAS_TYPE)
-    P_FILL = 40 * u('psi')  # Propellant fill pressure, used for density
-    # ------- MAIN RUN - DON'T CHANGE VARS -------
-
-    # Liquid Oxygen
-    vdot_lox = prop_vol_flow(OX, MDOT_LOX, P_FILL)
-    scfm_lox = scfm(vdot_lox, P_TANK, T_TANK)
-    mdot_gas_lox = m_dot(vdot_lox, P_TANK, T_TANK, GAS_TYPE)
-    throat_area_lox, throat_dia_lox = throat_calcs(mdot_gas_lox, P_bottle, T_COPV, GAS_TYPE)
-    Cv_lox = c_v(scfm_lox, P_bottle, P_TANK, T_COPV, GAS_TYPE)
-    vel_lox, mach_lox = vel_ideal_gas(T_COPV, P_bottle, tube_dia, mdot_gas_lox, GAS_TYPE)
-
-    # Fuel
-    vdot_fu = prop_vol_flow(FU, MDOT_FU, P_FILL)
-    scfm_fu = scfm(vdot_fu, P_TANK, T_TANK)
-    mdot_gas_fu = m_dot(vdot_fu, P_TANK, T_TANK, GAS_TYPE)
-    throat_area_fu, throat_dia_fu = throat_calcs(mdot_gas_fu, P_bottle, T_COPV, GAS_TYPE)
-    Cv_fu = c_v(scfm_fu, P_bottle, P_TANK, T_COPV, GAS_TYPE)
-    
-    print(f"Simulation of pressurization of {FU} and {OX} test with two {V_TANK.to('L'): ~P.2f} tanks from {V_bottle.to('L'): ~P.2f} COPV.")
-    print(f"Maintaining tank pressure of {P_TANK.to('psi'): ~P.2f} from {P_bottle.to('psi'): ~P.2f} initial COPV pressurization.")
-    print("Isentropic temp:", f"{T_TANK.to('kelvin'): ~P.2f}")
-    print("Mass Flow Rates (lox, fu): ", f"{MDOT_LOX.to('kg/s'): ~P.2f}, {MDOT_FU.to('kg/s'): ~P.2f}")
-    print("Line size (lox, fu): ", f"{tube_dia.to('in'): ~P.4f}, {tube_dia.to('in'): ~P.4f}")
-    print("Tank pressure and press gas temp: ", f"{P_TANK.to('psi'): ~P.2f}, {T_TANK.to('kelvin'): ~P.2f}")
-    print("COPV pressure and press gas temp: ", f"{P_bottle.to('psi'): ~P.2f}, {T_COPV.to('kelvin'): ~P.2f}")
-
-    print()
-    print("m_dot (lox, fu):", f"{mdot_gas_lox.to('kg/s'): ~P.4f},       " f"{mdot_gas_fu.to('kg/s'): ~P.4f}")
-    print("SCFM (lox, fu): ", f"{scfm_lox: ~P.4f},  " f"{scfm_fu: ~P.4f}")
-    print("Area (lox, fu): ", f"{throat_area_lox: ~P.4f},        ", f"{throat_area_fu: ~P.4f}")
-    print("Dia (lox, fu):  ", f"{throat_dia_lox: ~P.4f},         ", f"{throat_dia_fu: ~P.4f}")
-    print("C_v (lox, fu):  ", f"{Cv_lox: <.4f},            ", f"{Cv_fu: <.4f}")
-    #print("Velocity (lox, fu):  ", f"{vel_lox: ~P.4f},         ", f"{vel_fu: ~P.4f}")
-    #print("Mach (lox, fu):  ", f"{mach_lox: ~P.4f},         ", f"{mach_fu: ~P.4f}")
-
-    T1, P1, T01, P01, M, a1, v1 = isentropic_flow(T_COPV, P_bottle, mdot_gas_lox + mdot_gas_fu, tube_dia, "N2")
-    T02, P02, T2, P2, M2, a2, v2 = fanno_flow(T01, P01, T1, P1, M, 2 * u('ft'), tube_dia, "N2")
-
-    T3_lox, P3_lox, T03_lox, P03_lox, M3_lox, a3_lox, v3_lox = isentropic_flow(T02, P02, mdot_gas_lox, tube_dia, "N2")
-    T04_lox, P04_lox, T4_lox, P4_lox, M4_lox, a4_lox, v4_lox = fanno_flow(T03_lox, P03_lox, T3_lox, P3_lox, M3_lox, 7 * u('ft'), tube_dia, "N2")
-
-    T3_fu, P3_fu, T03_fu, P03_fu, M3_fu, a3_fu, v3_fu = isentropic_flow(T02, P02, mdot_gas_fu, tube_dia, "N2")
-    T04_fu, P04_fu, T4_fu, P4_fu, M4_fu, a4_fu, v4_fu = fanno_flow(T03_fu, P03_fu, T3_fu, P3_fu, M3_fu, 7 * u('ft'), tube_dia, "N2")
-    
-    a2.ito('m/s')
-    v2.ito('m/s')
-    P1.ito('psi')
-    P2.ito('psi')
-    P3_fu.ito('psi')
-    P3_lox.ito('psi')
-    P4_fu.ito('psi')
-    P4_lox.ito('psi')
-    P01.ito('psi')
-    P02.ito('psi')
-    P03_fu.ito('psi')
-    P03_lox.ito('psi')
-    P04_fu.ito('psi')
-    P04_lox.ito('psi')
-
-    print("T01, P01, T1, P1, M1, speed of sound, velocity:", f"{T01: ~P.4f}, {P01: ~P.4f}, {T1: ~P.4f}, {P1: ~P.4f}, {M: ~P.4f}, {a1: ~P.4f}, {v1: ~P.4f},")
-    print("T02, P02, T2, P2, M2, speed of sound, velocity:", f"{T02: ~P.4f}, {P02: ~P.4f}, {T2: ~P.4f}, {P2: ~P.4f}, {M2: ~P.4f}, {a2: ~P.4f}, {v2: ~P.4f},")
-
-    print("T03_lox, P03_lox, T3_lox, P3_lox, M3_lox, speed of sound 3 lox, velocity 3 lox:", f"{T03_lox: ~P.4f}, {P03_lox: ~P.4f}, {T3_lox: ~P.4f}, {P3_lox: ~P.4f}, {M3_lox: ~P.4f}, {a3_lox: ~P.4f}, {v3_lox: ~P.4f},")
-    print("T04_lox, P04_lox, T4_lox, P4_lox, M4_lox, speed of sound 4 lox, velocity 4 lox:", f"{T04_lox: ~P.4f}, {P04_lox: ~P.4f}, {T4_lox: ~P.4f}, {P4_lox: ~P.4f}, {M4_lox: ~P.4f}, {a4_lox: ~P.4f}, {v4_lox: ~P.4f},")
-
-    print("T03_fu, P03_fu, T3_fu, P3_fu, M3_fu, speed of sound 3 fu, velocity 3 fu:", f"{T03_fu: ~P.4f}, {P03_fu: ~P.4f}, {T3_fu: ~P.4f}, {P3_fu: ~P.4f}, {M3_fu: ~P.4f}, {a3_fu: ~P.4f}, {v3_fu: ~P.4f},")
-    print("T04_fu, P04_fu, T4_fu, P4_fu, M4_fu, speed of sound 4 fu, velocity 4 fu:", f"{T04_fu: ~P.4f}, {P04_fu: ~P.4f}, {T4_fu: ~P.4f}, {P4_fu: ~P.4f}, {M4_fu: ~P.4f}, {a4_fu: ~P.4f}, {v4_fu: ~P.4f},")
-
-    outputs = {
-        "OX": {
-            "m_dot": MDOT_LOX,
-            "V_dot": vdot_lox,
-            "SCFM": scfm_lox,
-            "Gas m_dot": mdot_gas_lox,
-            "Throat Area": throat_area_lox,
-            "Throat Diameter": throat_dia_lox,
-            "Cv": Cv_lox
-        },
-
-        "FU": {
-            "m_dot": MDOT_FU,
-            "V_dot": vdot_fu,
-            "SCFM": scfm_fu,
-            "Gas m_dot": mdot_gas_fu,
-            "Throat Area": throat_area_fu,
-            "Throat Diameter": throat_dia_fu,
-            "Cv": Cv_fu
-        },
-
-        "Config": {
-            "Oxidizer": OX,
-            "Fuel": FU,
-            "Tank Pressure": P_TANK,
-            "Tank Volume": V_TANK,
-            "Bottle Pressure": P_bottle,
-            "Bottle Volume": V_bottle,
-            "Bottle Temp": T_COPV,
-            "Press Gas Temp": T_TANK
-        }
-    }
-
-    return outputs
-# endregion
-
-test4 = run_test(1500*u('psi'), 6000*u('psi'), V_BOTTLE*6, (0.5 - 2*0.065) * u("in"), 'N2')
-'''

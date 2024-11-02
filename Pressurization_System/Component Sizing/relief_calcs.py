@@ -10,9 +10,9 @@ from press_funcs import *
 # ---------------------- CONSTANT PRESSURE WITH MASS FLOW ----------------------
 print('------------------------- HYDROGEN --------------------------')
 gas = 'Nitrogen'
-reg_cv = 0.08 * u('dimensionless')
+reg_cv = 1.3 * u('dimensionless')
 source_P = 6000 * u('psi')
-relief_P = 1500 * u('psi')
+relief_P = 1470 * u('psi')
 amb_P = P_STD
 source_T = T_STD
 
@@ -26,6 +26,7 @@ area, dia = choked_flow_dim(mdot_out, relief_P, t_relief, gas)
 c_v_out = c_v(flow_in, relief_P, amb_P, t_relief, gas) * u('dimensionless')
 print(f"SCFM in: {flow_in: ~P.4f}, Required Cv out: {c_v_out: ~P.4f}, Required mdot out: {mdot_out: ~P.4f}, Required diameter out: {dia: ~P.4f}")
 print(f"Relief temp: {t_relief: ~P.4f}, {amb_P: ~P.4f}")
+
 '''
 # -------------------- VARIABLE PRESSURE WITH MASS FLOW ---------------------
 tank_P = 1500 * u('psi')

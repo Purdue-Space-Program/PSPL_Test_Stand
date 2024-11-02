@@ -1,9 +1,9 @@
 from press_funcs import *
 
-h2_source_press = 5000 * u('psi')
-gox_source_press = 2400 * u('psi')
-gox_regulated_press = 500 * u('psi')
-h2_regulated_press = 500 * u('psi')
+h2_source_press = 1500 * u('psi')
+gox_source_press = 1200 * u('psi')
+gox_regulated_press = 400 * u('psi')
+h2_regulated_press = 400 * u('psi')
 T_h2_reg = T_isent_exp(T_STD, h2_source_press, h2_regulated_press, "Hydrogen")
 T_gox_reg = T_isent_exp(T_STD, gox_source_press, gox_regulated_press, "Oxygen")
 T_h2_reg = T_STD
@@ -11,14 +11,14 @@ T_gox_reg = T_STD
 tube_dia = (0.375 - 0.049*2) * u('in')
 
 
-mdot_h2 = 4 * u('g/s')
-mdot_gox = 20 * u('g/s')
+mdot_h2 = 6 * u('g/s')
+mdot_gox = 15 * u('g/s')
 
 scfm_h2 = mdot_to_scfm(mdot_h2, "Hydrogen")
 scfm_gox = mdot_to_scfm(mdot_gox, "Oxygen")
 
-c_v_h2 = c_v(scfm_h2, h2_source_press, 14.7 * u('psi'), T_STD, "Hydrogen")
-c_v_gox = c_v(scfm_gox, gox_source_press, 14.7 * u('psi'), T_STD, "Oxygen")
+c_v_h2 = c_v(scfm_h2, h2_source_press, h2_regulated_press, T_STD, "Hydrogen")
+c_v_gox = c_v(scfm_gox, gox_source_press, gox_regulated_press, T_STD, "Oxygen")
 
 area_h2, dia_h2 = choked_flow_dim(mdot_h2, h2_source_press, T_STD, "Hydrogen")
 area_gox, dia_gox = choked_flow_dim(mdot_gox, gox_source_press, T_STD, "Oxygen")

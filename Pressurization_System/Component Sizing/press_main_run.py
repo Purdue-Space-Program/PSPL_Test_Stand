@@ -27,19 +27,19 @@ def run_test(combined=False):
     # Change These
     # Oxidizer
     OX = 'Oxygen'
-    MDOT_LOX = 7.302 * u('lb/s')  # LOX mass flow out of tank
+    MDOT_LOX = 7.908 * u('lb/s')  # LOX mass flow out of tank
 
     # Fuel
-    FU = 'Isopropanol'
-    MDOT_FU = 3.990 * u('lb/s')  # Methane mass flow out of tank
+    FU = 'Kerosene'
+    MDOT_FU = 3.468 * u('lb/s')  # Methane mass flow out of tank
 
     # Press Gas
     GAS_TYPE_LOX = 'N2'
     GAS_TYPE_FU = 'N2'
 
     # Change These
-    P_TANK_LOX = 1055 * u('psi')  # Prop tank pressure 1055 450
-    P_TANK_FU = 1055 * u('psi')
+    P_TANK_LOX = 450 * u('psi')  # Prop tank pressure 1055 450
+    P_TANK_FU = 450 * u('psi')
 
     total_mdot = (1) * u('lb/s') # USER INPUT
     mdot_gas_fu = 0.1 * u('lb/s')
@@ -220,6 +220,7 @@ def run_test(combined=False):
             print("Propellant m_dot (lox, fu):", f"{MDOT_LOX.to('lb/s'): ~P.4f},       " f"{MDOT_FU.to('lb/s'): ~P.4f}")
             print(f"Source P (lox, fu):", f"        {P_source_lox.to('psi'): ~P.4f},     " f"{P_source_fu.to('psi'): ~P.4f}")
             print("m_dot (lox, fu):", f"           {mdot_gas_lox.to('lb/s'): ~P.4f},       " f"{mdot_gas_fu.to('lb/s'): ~P.4f}"f"    Total:{(mdot_gas_fu + mdot_gas_lox).to('lb/s'): ~P.4f}")
+            print("v_dot (lox, fu):", f"           {vdot_lox.to('ft^3/min'): ~P.4f},       " f"{vdot_fu.to('ft^3/min'): ~P.4f}")
             print("T tank gas (lox, fu): ", f"     {T_TANK_LOX: ~P.4f},         " f"{T_TANK_FU: ~P.4f}")
             print("SCFM (lox, fu): ", f"           {scfm_lox: ~P.4f},   " f"{scfm_fu: ~P.4f}")
             print("Area (lox, fu): ", f"           {throat_area_lox: ~P.4f},        ", f"{throat_area_fu: ~P.4f}")
@@ -227,6 +228,6 @@ def run_test(combined=False):
             print("C_v (lox, fu):  ", f"           {Cv_lox: <.4f},            ", f"{Cv_fu: <.4f}")
             print("Comb. flow (area, dia)", f"     {throat_area_combined: ~P.4f}      ", f"   {throat_dia_combined: ~P.4f}")
             print("Regulator Flow (SCFM)", f"      {regflow: ~P.4f}")
-
+            print(c_v(scfm_lox, 6000 * u('psi'), 1547 * u('psi'), T_STD, "Nitrogen"))
 
 run_test()
