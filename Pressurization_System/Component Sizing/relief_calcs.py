@@ -8,11 +8,11 @@ from press_funcs import *
 # Hydrogen flow enters a 1.3 Cv regulator at 5000 psi upstream, goes to temp of methane in tank
 
 # ---------------------- CONSTANT PRESSURE WITH MASS FLOW ----------------------
-print('------------------------- HYDROGEN --------------------------')
+print('------------------------- CONSTANT PRESSURE --------------------------')
 gas = 'Nitrogen'
 reg_cv = 1.3 * u('dimensionless')
 source_P = 6000 * u('psi')
-relief_P = 1470 * u('psi')
+relief_P = 1329 * u('psi')
 amb_P = P_STD
 source_T = T_STD
 
@@ -27,10 +27,10 @@ c_v_out = c_v(flow_in, relief_P, amb_P, t_relief, gas) * u('dimensionless')
 print(f"SCFM in: {flow_in: ~P.4f}, Required Cv out: {c_v_out: ~P.4f}, Required mdot out: {mdot_out: ~P.4f}, Required diameter out: {dia: ~P.4f}")
 print(f"Relief temp: {t_relief: ~P.4f}, {amb_P: ~P.4f}")
 
-'''
+
 # -------------------- VARIABLE PRESSURE WITH MASS FLOW ---------------------
-tank_P = 1500 * u('psi')
-print('------------------------- NITROGEN --------------------------')
+tank_P = 1329 * u('psi')
+print('------------------------- VARIABLE PRESSURE --------------------------')
 gas = 'Nitrogen'
 total_mdot = 0.1 * u('lb/s')
 regflow = 1 * u('lb/s')
@@ -61,4 +61,3 @@ print(f"SCFM in: {flow_in: ~P.4f}, Required Cv out: {c_v_out: ~P.4f}, Required m
 print(f"Gas temp in tank: {t_tank: ~P.4f}")
 print("mdot for 0.25\" orifice:", f"{choked_mdot(0.25 * u('in'), tank_P, t_tank, gas): ~P.4f}")
 print(cp.PropsSI('T', 'P', (20*u('psi')).to('Pa').m, 'Q', 0, "Nitrogen"))
-'''

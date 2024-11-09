@@ -1,9 +1,8 @@
 from press_funcs import *
 
-P_tank = 600 * u('psi')
-P_source = 6000 * u('psi')
+P_tank = 550 * u('psi')
+P_source = 2400 * u('psi')
 mdot_prop = 4 * u('lb/s')
-
 
 T_tank = T_isent_exp(T_STD, P_source, P_tank, "Nitrogen")
 vdot = prop_vol_flow("Ethanol", mdot_prop, 14.7 * u('psi'))
