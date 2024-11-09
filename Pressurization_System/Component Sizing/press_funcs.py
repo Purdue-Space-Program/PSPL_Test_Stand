@@ -116,7 +116,7 @@ def get_constants(gas, T0=T_STD, P0=P_STD):
     R = 8.314 * u('J/mol/K') / mm_gas
 
     Z = cp.PropsSI('Z', 'P', P0.m, 'T', T0.m, gas) * u('dimensionless')
-    # print("Specific heat ratio for ", gas, ": ", gamma)
+    print("compressibility ratio for ", gas, ": ", Z)
     R *= Z
     T0.ito('kelvin')
     P0.ito('psi')
