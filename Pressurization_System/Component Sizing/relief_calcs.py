@@ -27,7 +27,7 @@ c_v_out = c_v(flow_in, relief_P, amb_P, t_relief, gas) * u('dimensionless')
 print(f"SCFM in: {flow_in: ~P.4f}, Required Cv out: {c_v_out: ~P.4f}, Required mdot out: {mdot_out: ~P.4f}, Required diameter out: {dia: ~P.4f}")
 print(f"Relief temp: {t_relief: ~P.4f}, {amb_P: ~P.4f}")
 
-
+'''
 # -------------------- VARIABLE PRESSURE WITH MASS FLOW ---------------------
 tank_P = 1329 * u('psi')
 print('------------------------- VARIABLE PRESSURE --------------------------')
@@ -61,3 +61,4 @@ print(f"SCFM in: {flow_in: ~P.4f}, Required Cv out: {c_v_out: ~P.4f}, Required m
 print(f"Gas temp in tank: {t_tank: ~P.4f}")
 print("mdot for 0.25\" orifice:", f"{choked_mdot(0.25 * u('in'), tank_P, t_tank, gas): ~P.4f}")
 print(cp.PropsSI('T', 'P', (20*u('psi')).to('Pa').m, 'Q', 0, "Nitrogen"))
+'''

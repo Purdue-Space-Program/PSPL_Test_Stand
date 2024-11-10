@@ -40,7 +40,7 @@ def prop_vol_flow(prop, m_dot, P):
         rho = 785.027 * u('kg/m^3')
     else:
         rho = cp.PropsSI('D', 'P', P.to('Pa').m, 'Q', 0, prop) * u('kg/m^3')
-        print(rho)
+        #print(rho)
     # T_sat = cp.PropsSI('T', 'P', P.to('Pa').m, 'Q', 0, prop) * u('kelvin')
     v_dot = m_dot / rho  # Volumetric flow out of tank 
 
@@ -116,7 +116,7 @@ def get_constants(gas, T0=T_STD, P0=P_STD):
     R = 8.314 * u('J/mol/K') / mm_gas
 
     Z = cp.PropsSI('Z', 'P', P0.m, 'T', T0.m, gas) * u('dimensionless')
-    print("compressibility ratio for ", gas, ": ", Z)
+    # print("compressibility ratio for ", gas, ": ", Z)
     R *= Z
     T0.ito('kelvin')
     P0.ito('psi')
@@ -150,6 +150,7 @@ def acfm_to_mdot(acfm, P, T, gas):
     '''
 
     R, gamma, S_g, choke = get_constants(gas, T, P)
+    #print(R)
     return ((P * acfm) / (R * T)).to('kg/s')
 
 #def vdot_out_scfm_in(acfm_out, P1, P2, T1)
@@ -214,8 +215,7 @@ def c_v(scfm, P1, P2, T, gas):
     '''
 
     R, gamma, S_g, choke = get_constants(gas, T, P1)
-
-    print("--------------------------------------------------------------------")
+    #print("--------------------------------------------------------------------")
     if P2 == 'choked':
         P1 = choke * P2 + 5
 
@@ -331,7 +331,7 @@ def T_isent_exp(T1, P1, P2, gas):
     '''
     
     R, gamma, S_g, choke = get_constants(gas, T1, P1)
-
+    print(gamma)
     return (T1 * (P2 / P1)**(1 - 1 / gamma)).to('kelvin')
 
 # region Fanno Flow
@@ -493,9 +493,9 @@ def plot_copv():
     #plt.annotate(f"({max_press.to('psi'): ~P.2f}, {PMAX_COPV.to('psi'): ~P.2f})", (max_press, PMAX_COPV))
     plt.show()
 
-def plot_cv():
-    cv = [c_v(2370 * u('ft^3/min'), 6000 * u('psi'), i * u('psi'), 193.35213377632095 * u('K'), 'N2') for i in range(5500)]
-    P = [x for x in range(5500)]
+def plot_cv(scfm, P_1, T_tank, max_P, gas):
+    cv = [c_v(scfm, P_1, i * u('psi'), T_tank, gas) for i in range(max_P)]
+    P = [x for x in range(max_P)]
     plt.figure(1)
     plt.plot(P, cv, label = 'C_v Value')
     plt.xlabel('Downstream Pressure')
