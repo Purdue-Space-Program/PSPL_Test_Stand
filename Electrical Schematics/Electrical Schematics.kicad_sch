@@ -1,0 +1,89 @@
+(kicad_sch
+	(version 20231120)
+	(generator "eeschema")
+	(generator_version "8.0")
+	(uuid "0f12d532-e6ec-49f4-a357-0f76d81ddae9")
+	(paper "A4")
+	(lib_symbols)
+	(sheet
+		(at 97.79 27.94)
+		(size 54.61 30.48)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "1dec3be8-4f88-456d-bc72-e941d3b61c88")
+		(property "Sheetname" "ER5000"
+			(at 97.79 27.2284 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "ER5000.kicad_sch"
+			(at 97.79 59.0046 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "Electrical Schematics"
+				(path "/0f12d532-e6ec-49f4-a357-0f76d81ddae9"
+					(page "3")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 31.75 27.94)
+		(size 55.88 30.48)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "2a3d88c1-11c6-4c4b-8b0c-8e4839867d40")
+		(property "Sheetname" "Igniter Circuit"
+			(at 31.75 27.2284 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "Igniter Circuit.kicad_sch"
+			(at 31.75 59.0046 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "Electrical Schematics"
+				(path "/0f12d532-e6ec-49f4-a357-0f76d81ddae9"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+)
