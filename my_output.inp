@@ -1,0 +1,10 @@
+problem rocket frozen
+   p(psi) = 827400.00000
+   o/f = 40.00000
+   sup = 1.00000
+react  
+   fuel=H2 wt=100.00000  t,k=290.00000 
+   ox=O2 wt=100.00000  t,k=290.00000 
+output trans
+   plot p t ispfz ivacfz m mw cp gam o/f cffz rho son machfz phi h cond pran ae pip
+end
