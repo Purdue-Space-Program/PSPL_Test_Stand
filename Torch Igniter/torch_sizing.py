@@ -19,13 +19,15 @@ Cd_ox = 0.7
 Cd_fu = 0.7
 
 # Operating parameters
-ox = 'Oxygen'
-fu = 'Hydrogen'
-oxidizer = 'O2'
-fuel = 'H2'
 
 temp_ox = 290
 temp_fu = 290
+
+ox = 'Oxygen'
+fu = 'Hydrogen'
+oxidizer = CEA.Oxidizer('O2', temp = temp_ox)
+fuel = CEA.Fuel('H2', temp = temp_fu)
+
 
 chamber_pressure = 120 * PSI2PA
 
@@ -51,3 +53,16 @@ print(f'Exit flame OF: {exit_flame_OF:.2f}')
 print(f'Oxygen mass flow rate {ox_mdot * 1000:.2f} g/s')
 print(f'Fuel core mass flow rate {fu_mdot * 1000:.2f} g/s')
 print(f'Fuel cooling mass flow rate {fu_cooling_mdot * 1000:.2f} g/s')
+
+problem = CEA.RocketProblem(pressure = chamber_pressure, sup = 1, materials = [fuel, oxidizer], o_f = core_OF)
+data = problem.run()
+
+cstar = data.cstar
+total_mdot = ox_mdot + fu_mdot 
+
+throat_diameter = 0.18 * IN2M
+
+throat_area = (np.pi/4) * throat_diameter**2
+
+chamber_pressure = (cstar * total_mdot) / throat_area
+print(chamber_pressure / PSI2PA)
