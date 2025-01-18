@@ -1,6 +1,6 @@
 import numpy as np
 import CEA_Wrap as CEA
-import CoolProp.CoolProp as CP
+import CoolProp as CP
 
 # Unit conversions
 IN2M = 0.0254
