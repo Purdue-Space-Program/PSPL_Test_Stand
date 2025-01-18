@@ -40,7 +40,7 @@ R_fu = PropsSI("C", "T", temp_fu, "P", inlet_pressure, fu) - PropsSI(
 ox_set_pressure = inlet_pressure / (2 / (gamma_ox + 1)) ** (gamma_ox / (gamma_ox - 1))
 fu_set_pressure = inlet_pressure / (2 / (gamma_fu + 1)) ** (gamma_fu / (gamma_fu - 1))
 
-core_OF = 40
+core_OF = 2
 exit_flame_OF = 7
 
 problem = CEA.RocketProblem(
@@ -52,6 +52,7 @@ problem = CEA.RocketProblem(
 )
 data = problem.run()
 cstar = data.cstar
+chamber_temp = data.c_t
 
 throat_diameter = 0.18 * IN2M
 
@@ -60,8 +61,9 @@ throat_area = (np.pi / 4) * throat_diameter**2
 mdot_core = (throat_area * chamber_pressure) / cstar
 mdot_fu = mdot_core / (core_OF + 1)
 mdot_ox = mdot_fu * core_OF
-mdot_fu_total = mdot_ox / exit_flame_OF
-mdot_fu_cooling = mdot_fu_total - mdot_fu
+mdot_ox_total = mdot_fu * exit_flame_OF
+mdot_ox_cooling = mdot_ox_total - mdot_ox
+mdot_total = mdot_fu + mdot_ox_total
 
 ox_inlet_area = mdot_ox / (
     Cd_ox
@@ -72,6 +74,7 @@ ox_inlet_area = mdot_ox / (
         / np.sqrt(gamma_ox * R_ox * temp_ox)
     )
 )
+
 fu_inlet_area = mdot_fu / (
     Cd_fu
     * inlet_pressure
@@ -81,29 +84,33 @@ fu_inlet_area = mdot_fu / (
         / np.sqrt(gamma_fu * R_fu * temp_fu)
     )
 )
-fu_cooling_inlet_area = mdot_fu_cooling / (
-    Cd_fu
+
+ox_cooling_inlet_area = mdot_ox_cooling / (
+    Cd_ox
     * inlet_pressure
-    * gamma_fu
+    * gamma_ox
     * (
-        np.sqrt((2 / (gamma_fu + 1)) ** ((gamma_fu + 1) / (gamma_fu - 1)))
-        / np.sqrt(gamma_fu * R_fu * temp_fu)
+        np.sqrt((2 / (gamma_ox + 1)) ** ((gamma_ox + 1) / (gamma_ox - 1)))
+        / np.sqrt(gamma_ox * R_ox * temp_ox)
     )
 )
 
 ox_inlet_diam = 2 * np.sqrt(ox_inlet_area / np.pi)
 fu_inlet_diam = 2 * np.sqrt(fu_inlet_area / np.pi)
-fu_cooling_inlet_diam = 2 * np.sqrt(fu_cooling_inlet_area / np.pi)
+ox_cooling_inlet_diam = 2 * np.sqrt(ox_cooling_inlet_area / np.pi)
 
-print(f"Oxygen inlet diameter {ox_inlet_diam / IN2M:.4f} in")
-print(f"Fuel inlet diameter {fu_inlet_diam / IN2M:.4f} in")
-print(f"Fuel cooling inlet diameter {fu_cooling_inlet_diam / IN2M:.4f} in")
-print(f"Oxygen set pressure {ox_set_pressure / PSI2PA:.2f} psi")
-print(f"Fuel set pressure {fu_set_pressure / PSI2PA:.2f} psi")
-print(f"Oxygen mass flow rate {mdot_ox * 1000:.2f} g/s")
-print(f"Fuel core mass flow rate {mdot_fu * 1000:.2f} g/s")
-print(f"Fuel cooling mass flow rate {mdot_fu_cooling * 1000:.2f} g/s")
-
+print("==================== Results ====================")
+print(f"Oxygen inlet diameter: {ox_inlet_diam / IN2M:.4f} in")
+print(f"Oxygen cooling inlet diameter: {ox_cooling_inlet_diam / IN2M:.4f} in")
+print(f"Fuel inlet diameter: {fu_inlet_diam / IN2M:.4f} in")
+print(f"Oxygen set pressure: {ox_set_pressure / PSI2PA:.2f} psi")
+print(f"Fuel set pressure: {fu_set_pressure / PSI2PA:.2f} psi")
+print(f"Oxygen core mass flow rate: {mdot_ox * 1000:.2f} g/s")
+print(f"Oxygen cooling mass flow rate: {mdot_ox_cooling * 1000:.2f} g/s")
+print(f"Fuel core mass flow rate: {mdot_fu * 1000:.2f} g/s")
+print(f"Total mass flow rate: {mdot_total * 1000:.2f} g/s")
+print(f"Chamber pressure: {chamber_pressure / PSI2PA:.2f} psi")
+print(f"Chamber temperature: {chamber_temp:.2f} K")
 
 
 

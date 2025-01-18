@@ -1,6 +1,6 @@
 problem rocket frozen
    p(psi) = 827400.00000
-   o/f = 40.00000
+   o/f = 2.00000
    sup = 1.00000
 react  
    fuel=H2 wt=100.00000  t,k=290.00000 
