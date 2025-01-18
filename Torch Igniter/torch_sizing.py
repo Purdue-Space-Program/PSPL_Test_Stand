@@ -20,7 +20,6 @@ fu = 'Hydrogen'
 oxidizer = CEA.Oxidizer('O2', temp = temp_ox)
 fuel = CEA.Fuel('H2', temp = temp_fu)
 
-
 chamber_pressure = 120 * PSI2PA
 
 inlet_pressure = 1.2 * chamber_pressure
