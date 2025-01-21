@@ -43,16 +43,27 @@ fu_set_pressure = inlet_pressure / (2 / (gamma_fu + 1)) ** (gamma_fu / (gamma_fu
 core_OF = 2
 exit_flame_OF = 7
 
-problem = CEA.RocketProblem(
+chamber = CEA.RocketProblem(
     pressure=chamber_pressure,
     sup=1,
     materials=[fuel, oxidizer],
     o_f=core_OF,
     analysis_type="frozen",
 )
-data = problem.run()
-cstar = data.cstar
-chamber_temp = data.c_t
+chamber_data = chamber.run()
+cstar = chamber_data.cstar
+chamber_temp = chamber_data.c_t
+
+exit = CEA.RocketProblem(
+    pressure=14.7,
+    pip=1.1,
+    materials=[fuel, oxidizer],
+    o_f=exit_flame_OF,
+    analysis_type="frozen",
+)
+exit_data = exit.run()
+exit_flame_temp = exit_data.c_t
+
 
 throat_diameter = 0.18 * IN2M
 
@@ -111,6 +122,7 @@ print(f"Fuel core mass flow rate: {mdot_fu * 1000:.2f} g/s")
 print(f"Total mass flow rate: {mdot_total * 1000:.2f} g/s")
 print(f"Chamber pressure: {chamber_pressure / PSI2PA:.2f} psi")
 print(f"Chamber temperature: {chamber_temp:.2f} K")
+print(f"Exit flame temperature: {exit_flame_temp:.2f} K")
 
 
 
