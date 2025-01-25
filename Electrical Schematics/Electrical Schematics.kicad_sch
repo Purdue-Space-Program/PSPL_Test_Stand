@@ -81,6 +81,82 @@
 			)
 		)
 	)
+	(sheet
+		(at 160.02 27.94)
+		(size 52.07 30.48)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "8abfc40e-83d5-4bf0-b389-521c10d90251")
+		(property "Sheetname" "SC-33 Load Cells"
+			(at 160.02 27.2284 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "SC-33 Load Cells.kicad_sch"
+			(at 160.02 59.0046 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "Electrical Schematics"
+				(path "/0f12d532-e6ec-49f4-a357-0f76d81ddae9"
+					(page "4")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 31.75 67.31)
+		(size 55.88 29.21)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "f39ee46b-5a17-465f-af05-5610a73a3e62")
+		(property "Sheetname" "EMatch"
+			(at 31.75 66.5984 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "EMatch.kicad_sch"
+			(at 31.75 97.1046 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "Electrical Schematics"
+				(path "/0f12d532-e6ec-49f4-a357-0f76d81ddae9"
+					(page "5")
+				)
+			)
+		)
+	)
 	(sheet_instances
 		(path "/"
 			(page "1")

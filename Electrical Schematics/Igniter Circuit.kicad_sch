@@ -2371,7 +2371,7 @@
 		)
 		(uuid "f2c8685a-c818-4f98-8aa5-d669790fe5ee")
 	)
-	(text "E-MATCH\n"
+	(text "Igniter\n"
 		(exclude_from_sim no)
 		(at 170.18 122.174 0)
 		(effects
