@@ -142,28 +142,30 @@
 				)
 			)
 		)
-		(symbol "Relay:AZSR131-1AE-12D"
+		(symbol "Relay:DIPxx-1Cxx-51x"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "RL2"
-				(at 12.065 0 90)
+			(property "Reference" "K"
+				(at 11.43 3.81 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(justify left)
 				)
 			)
-			(property "Value" "AZSR131-1AE-12D"
-				(at 9.525 0 90)
+			(property "Value" "DIPxx-1Cxx-51x"
+				(at 11.43 1.27 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(justify left)
 				)
 			)
-			(property "Footprint" "Relay_THT:Relay_SPST_Zettler-AZSR131"
-				(at 7.62 -1.27 0)
+			(property "Footprint" "Relay_THT:Relay_StandexMeder_DIP_LowProfile"
+				(at 11.43 -1.27 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -172,7 +174,7 @@
 					(hide yes)
 				)
 			)
-			(property "Datasheet" "https://www.azettler.com/pdfs/azsr131.pdf"
+			(property "Datasheet" "https://standexelectronics.com/wp-content/uploads/datasheet_reed_relay_DIP.pdf"
 				(at 0 0 0)
 				(effects
 					(font
@@ -181,7 +183,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "SPST, Closing Contact, 277VAC 35A max, 12V DC coil voltage"
+			(property "Description" "Standex Meder DIP reed relay, SPDT"
 				(at 0 0 0)
 				(effects
 					(font
@@ -190,7 +192,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_keywords" "Single Pole Reed Relay SPST"
+			(property "ki_keywords" "Single Pole Reed Relay SPDT"
 				(at 0 0 0)
 				(effects
 					(font
@@ -199,7 +201,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_fp_filters" "Relay*AZSR131*"
+			(property "ki_fp_filters" "Relay*StandexMeder*DIP*LowProfile*"
 				(at 0 0 0)
 				(effects
 					(font
@@ -208,10 +210,22 @@
 					(hide yes)
 				)
 			)
-			(symbol "AZSR131-1AE-12D_0_0"
+			(symbol "DIPxx-1Cxx-51x_0_0"
 				(polyline
 					(pts
-						(xy 5.08 5.08) (xy 5.08 2.54) (xy 4.445 3.175) (xy 5.08 3.81)
+						(xy 2.54 5.08) (xy 2.54 2.54) (xy 3.175 3.175) (xy 2.54 3.81)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(polyline
+					(pts
+						(xy 7.62 5.08) (xy 7.62 2.54) (xy 6.985 3.175) (xy 7.62 3.81)
 					)
 					(stroke
 						(width 0)
@@ -222,10 +236,10 @@
 					)
 				)
 			)
-			(symbol "AZSR131-1AE-12D_0_1"
+			(symbol "DIPxx-1Cxx-51x_0_1"
 				(rectangle
 					(start -10.16 5.08)
-					(end 6.35 -5.08)
+					(end 10.16 -5.08)
 					(stroke
 						(width 0.254)
 						(type default)
@@ -366,9 +380,9 @@
 					)
 				)
 			)
-			(symbol "AZSR131-1AE-12D_1_1"
+			(symbol "DIPxx-1Cxx-51x_1_1"
 				(pin passive line
-					(at -5.08 -7.62 90)
+					(at 2.54 7.62 270)
 					(length 2.54)
 					(name "~"
 						(effects
@@ -386,7 +400,25 @@
 					)
 				)
 				(pin passive line
-					(at -5.08 7.62 270)
+					(at 7.62 7.62 270)
+					(length 2.54)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "14"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -7.62 90)
 					(length 2.54)
 					(name "~"
 						(effects
@@ -404,6 +436,24 @@
 					)
 				)
 				(pin passive line
+					(at -5.08 7.62 270)
+					(length 2.54)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
 					(at 5.08 -7.62 90)
 					(length 2.54)
 					(name "~"
@@ -413,7 +463,7 @@
 							)
 						)
 					)
-					(number "3"
+					(number "7"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -422,8 +472,8 @@
 					)
 				)
 				(pin passive line
-					(at 5.08 7.62 270)
-					(length 2.54)
+					(at 5.08 -7.62 90)
+					(length 2.54) hide
 					(name "~"
 						(effects
 							(font
@@ -431,7 +481,7 @@
 							)
 						)
 					)
-					(number "4"
+					(number "8"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -912,31 +962,25 @@
 			)
 		)
 	)
-	(junction
-		(at 189.23 123.19)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "68c78275-fd8a-4e6b-9c62-2a3fda12e5bc")
-	)
 	(wire
 		(pts
-			(xy 220.98 120.65) (xy 220.98 123.19)
+			(xy 127 102.87) (xy 153.67 102.87)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "12ad8b2a-a4ad-4575-9c07-279c1551dc9f")
+		(uuid "3730893b-a62e-4534-bdee-25716adaebbd")
 	)
 	(wire
 		(pts
-			(xy 151.13 102.87) (xy 153.67 102.87)
+			(xy 194.31 133.35) (xy 194.31 135.89)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "4e25ef25-6cac-4676-bbde-35eecec128df")
+		(uuid "499d08ed-1536-4a62-8870-35e14c765a32")
 	)
 	(wire
 		(pts
@@ -960,16 +1004,6 @@
 	)
 	(wire
 		(pts
-			(xy 184.15 123.19) (xy 189.23 123.19)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6f55aae7-eda5-4504-b84c-55d9552a0269")
-	)
-	(wire
-		(pts
 			(xy 168.91 107.95) (xy 184.15 107.95)
 		)
 		(stroke
@@ -980,17 +1014,27 @@
 	)
 	(wire
 		(pts
-			(xy 189.23 123.19) (xy 194.31 123.19)
+			(xy 191.77 101.6) (xy 191.77 107.95)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "a9e1c166-4057-4214-8eab-06bf374e141b")
+		(uuid "a3ad78a3-7b97-4d7f-823f-ff4cb0e0c1f8")
 	)
 	(wire
 		(pts
-			(xy 194.31 105.41) (xy 194.31 107.95)
+			(xy 186.69 102.87) (xy 186.69 101.6)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b8c08ac8-7502-42cd-b2f1-6c39bad5258b")
+	)
+	(wire
+		(pts
+			(xy 196.85 105.41) (xy 196.85 107.95)
 		)
 		(stroke
 			(width 0)
@@ -1000,23 +1044,33 @@
 	)
 	(wire
 		(pts
-			(xy 220.98 110.49) (xy 220.98 105.41)
+			(xy 184.15 123.19) (xy 184.15 124.46)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "bf9c2349-692e-4a9d-a9a3-e0e8a4dc9e6c")
+		(uuid "bf8d5edf-5a8d-436f-b1e5-38dd24e6157d")
 	)
 	(wire
 		(pts
-			(xy 189.23 128.27) (xy 189.23 123.19)
+			(xy 127 106.68) (xy 127 102.87)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "e4a99262-2528-42a1-9168-9224e1356e1c")
+		(uuid "f49807c0-92ac-4206-ad86-f5453a53a00e")
+	)
+	(wire
+		(pts
+			(xy 186.69 101.6) (xy 191.77 101.6)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fbe02d8e-b5f1-495c-8dcc-f1504863fd2a")
 	)
 	(wire
 		(pts
@@ -1028,29 +1082,19 @@
 		)
 		(uuid "fe9e4313-22f3-4d0e-9013-e669965112e5")
 	)
-	(wire
-		(pts
-			(xy 220.98 105.41) (xy 194.31 105.41)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ffcc2313-ec4f-4908-83c7-ed44347e15f4")
-	)
 	(text "E-Match\n"
 		(exclude_from_sim no)
-		(at 230.632 115.57 0)
+		(at 203.962 128.27 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 		)
-		(uuid "051cd8a1-6baf-40ce-aecc-78cf6d83087f")
+		(uuid "65f8747f-98a3-4818-8fef-b5f78f8fd500")
 	)
 	(text "Mechanical Relay\n"
 		(exclude_from_sim no)
-		(at 188.214 103.378 0)
+		(at 168.402 116.078 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1087,177 +1131,6 @@
 				)
 				(justify right)
 				(hide yes)
-			)
-		)
-	)
-	(global_label "Digital OUT"
-		(shape input)
-		(at 151.13 102.87 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "2f592561-9d1d-4338-877a-3c2b0d9ebe19")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 137.3801 102.87 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-				(hide yes)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:Lamp")
-		(at 220.98 115.57 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "14ad3494-70ea-4750-aff7-380ac0fb919c")
-		(property "Reference" "LA2"
-			(at 224.79 114.2999 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "Value" "Lamp"
-			(at 224.79 116.8399 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "Footprint" ""
-			(at 220.98 113.03 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 220.98 113.03 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Lamp"
-			(at 220.98 115.57 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "de557d92-8db4-47db-8711-4dc2c79ac236")
-		)
-		(pin "1"
-			(uuid "540846c2-97d3-473b-8a1c-3cdab95930e9")
-		)
-		(instances
-			(project ""
-				(path "/0f12d532-e6ec-49f4-a357-0f76d81ddae9/f39ee46b-5a17-465f-af05-5610a73a3e62"
-					(reference "LA2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Relay:AZSR131-1AE-12D")
-		(at 189.23 115.57 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "41ad089b-7328-491b-9512-5d74cb829dc3")
-		(property "Reference" "RL2"
-			(at 196.85 114.2999 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "AZSR131-1AE-12D"
-			(at 196.85 116.8399 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Relay_THT:Relay_SPST_Zettler-AZSR131"
-			(at 196.85 116.84 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.azettler.com/pdfs/azsr131.pdf"
-			(at 189.23 115.57 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "SPST, Closing Contact, 277VAC 35A max, 12V DC coil voltage"
-			(at 189.23 115.57 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "35091362-1527-4698-827b-44e83e2ccf7b")
-		)
-		(pin "2"
-			(uuid "40ef67ad-712d-4115-977a-3928af27f8b2")
-		)
-		(pin "3"
-			(uuid "46f532d0-a39f-458d-8d0a-b54bdf7f07aa")
-		)
-		(pin "4"
-			(uuid "8d609876-2c42-4a0b-a39b-d855ec3a4bf0")
-		)
-		(instances
-			(project ""
-				(path "/0f12d532-e6ec-49f4-a357-0f76d81ddae9/f39ee46b-5a17-465f-af05-5610a73a3e62"
-					(reference "RL2")
-					(unit 1)
-				)
 			)
 		)
 	)
@@ -1328,83 +1201,17 @@
 		)
 	)
 	(symbol
-		(lib_id "power:GND")
-		(at 189.23 128.27 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "5dd740c9-4a8c-4b54-8300-66239a8f415b")
-		(property "Reference" "#PWR08"
-			(at 189.23 134.62 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 189.23 133.35 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 189.23 128.27 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 189.23 128.27 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 189.23 128.27 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "1435ef76-98f4-4c60-899e-30a0cde1f093")
-		)
-		(instances
-			(project ""
-				(path "/0f12d532-e6ec-49f4-a357-0f76d81ddae9/f39ee46b-5a17-465f-af05-5610a73a3e62"
-					(reference "#PWR08")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:+24V")
-		(at 220.98 123.19 180)
+		(at 196.85 105.41 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "88bf0a82-27e5-4218-984f-6c73be6ee037")
+		(uuid "6311f37e-a3ab-481b-bf06-322dcb63222a")
 		(property "Reference" "#PWR09"
-			(at 220.98 119.38 0)
+			(at 196.85 109.22 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1413,7 +1220,7 @@
 			)
 		)
 		(property "Value" "+24V"
-			(at 220.98 128.27 0)
+			(at 196.85 100.33 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1421,7 +1228,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 220.98 123.19 0)
+			(at 196.85 105.41 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1430,7 +1237,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 220.98 123.19 0)
+			(at 196.85 105.41 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1439,7 +1246,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+24V\""
-			(at 220.98 123.19 0)
+			(at 196.85 105.41 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1448,12 +1255,301 @@
 			)
 		)
 		(pin "1"
-			(uuid "2820006d-5f20-40dd-8a31-1fad11bf4370")
+			(uuid "a335bf65-3960-4486-bcbf-6c98d24a7ced")
 		)
 		(instances
 			(project ""
 				(path "/0f12d532-e6ec-49f4-a357-0f76d81ddae9/f39ee46b-5a17-465f-af05-5610a73a3e62"
 					(reference "#PWR09")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 186.69 102.87 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "98da68dc-194f-43b1-bf28-3d8bae201129")
+		(property "Reference" "#PWR011"
+			(at 186.69 109.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 186.69 107.95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 186.69 102.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 186.69 102.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 186.69 102.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "8c06ae1c-f20c-415c-8bd9-a620e0639e16")
+		)
+		(instances
+			(project ""
+				(path "/0f12d532-e6ec-49f4-a357-0f76d81ddae9/f39ee46b-5a17-465f-af05-5610a73a3e62"
+					(reference "#PWR011")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:Lamp")
+		(at 194.31 128.27 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "99c5c44c-f2a9-404d-843f-3245b5d17532")
+		(property "Reference" "LA2"
+			(at 198.12 126.9999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Value" "Lamp"
+			(at 198.12 129.5399 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 194.31 125.73 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 194.31 125.73 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Lamp"
+			(at 194.31 128.27 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "ff4addb7-0c0b-4653-b754-b3be5a8ed182")
+		)
+		(pin "1"
+			(uuid "b7b7e74d-68f3-418c-a931-90da8ac1d08b")
+		)
+		(instances
+			(project "Electrical Schematics"
+				(path "/0f12d532-e6ec-49f4-a357-0f76d81ddae9/f39ee46b-5a17-465f-af05-5610a73a3e62"
+					(reference "LA2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Relay:DIPxx-1Cxx-51x")
+		(at 189.23 115.57 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9b11b0e1-b38b-4225-b6a7-998283a09e5b")
+		(property "Reference" "K1"
+			(at 200.66 114.2999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Value" "DIPxx-1Cxx-51x"
+			(at 200.66 116.8399 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "Relay_THT:Relay_StandexMeder_DIP_LowProfile"
+			(at 200.66 116.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://standexelectronics.com/wp-content/uploads/datasheet_reed_relay_DIP.pdf"
+			(at 189.23 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Standex Meder DIP reed relay, SPDT"
+			(at 189.23 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "6c567b7f-c456-41d8-95a8-1f8155b887c2")
+		)
+		(pin "14"
+			(uuid "eecf1fde-85de-4fbe-9d5c-e1fd30d911d0")
+		)
+		(pin "2"
+			(uuid "9ee0be70-cf21-4782-afa8-ab3da55fb7a2")
+		)
+		(pin "6"
+			(uuid "2549ca08-7eb1-4e2c-99db-699bc3f9180d")
+		)
+		(pin "7"
+			(uuid "a8b0235a-89e7-4ccc-bf61-9c5dbdc792af")
+		)
+		(pin "8"
+			(uuid "b172e2bc-effe-4496-ac50-177141b09098")
+		)
+		(instances
+			(project ""
+				(path "/0f12d532-e6ec-49f4-a357-0f76d81ddae9/f39ee46b-5a17-465f-af05-5610a73a3e62"
+					(reference "K1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 184.15 124.46 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "b769c97e-85d4-436d-8606-544ca6ea5dac")
+		(property "Reference" "#PWR010"
+			(at 184.15 130.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 184.15 129.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 184.15 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 184.15 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 184.15 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "3ebd0b84-5487-41c5-b08a-297d785d8dac")
+		)
+		(instances
+			(project "Electrical Schematics"
+				(path "/0f12d532-e6ec-49f4-a357-0f76d81ddae9/f39ee46b-5a17-465f-af05-5610a73a3e62"
+					(reference "#PWR010")
 					(unit 1)
 				)
 			)
@@ -1533,6 +1629,138 @@
 			(project ""
 				(path "/0f12d532-e6ec-49f4-a357-0f76d81ddae9/f39ee46b-5a17-465f-af05-5610a73a3e62"
 					(reference "U1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 127 106.68 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "d4ad85f7-d42d-485f-bb88-f59f44b0f1c8")
+		(property "Reference" "#PWR012"
+			(at 127 113.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 127 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 127 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 127 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 127 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "a9b6c4db-3ac2-45e7-834e-612677dc906b")
+		)
+		(instances
+			(project ""
+				(path "/0f12d532-e6ec-49f4-a357-0f76d81ddae9/f39ee46b-5a17-465f-af05-5610a73a3e62"
+					(reference "#PWR012")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 194.31 135.89 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "f2f99b7c-1d9f-4525-8693-7edb3fc21f26")
+		(property "Reference" "#PWR08"
+			(at 194.31 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 194.31 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 194.31 135.89 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 194.31 135.89 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 194.31 135.89 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "31580824-1775-4960-af76-21e6cbe18fb6")
+		)
+		(instances
+			(project "Electrical Schematics"
+				(path "/0f12d532-e6ec-49f4-a357-0f76d81ddae9/f39ee46b-5a17-465f-af05-5610a73a3e62"
+					(reference "#PWR08")
 					(unit 1)
 				)
 			)
