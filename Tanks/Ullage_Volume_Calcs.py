@@ -27,11 +27,7 @@ import matplotlib.pyplot as plt
 # Function Definitions
 def getChoked(p_tank, p_He):
     press_ratio = p_He / p_tank # [unitless ratio]
-    if press_ratio > 1.9:
-        choked = 1 # [binary]
-    else:
-        choked = 0 # [binary]
-    return(choked)
+    return press_ratio > 1.9
 
 ###########################################################################
 # Define inputs
