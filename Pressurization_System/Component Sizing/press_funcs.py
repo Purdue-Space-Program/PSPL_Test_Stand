@@ -89,7 +89,7 @@ def prop_mdot_from_press_mdot(mdot_gas, P1, P2, T1, gas, prop, o_f):
     return mdot_fu, mdot_lox
 
 # region Compressible Gas Tools
-def get_constants(gas, T0=T_STD, P0=P_STD):
+def     get_constants(gas, T0=T_STD, P0=P_STD):
     '''
     Returns constant gas properties with units for various gases. 
 
@@ -101,6 +101,8 @@ def get_constants(gas, T0=T_STD, P0=P_STD):
         gas = 'Helium'
     elif gas == 'H2':
         gas = 'Hydrogen'
+    elif gas == "CO2":
+        gas = 'CarbonDioxide'
 
     T0.ito_base_units()
     P0.ito_base_units()
@@ -136,6 +138,13 @@ def mdot_to_scfm(mdot, gas):
     R, gamma, S_g, choke = get_constants(gas, T_STD, P_STD)
 
     return ((mdot * R * T_STD) / (P_STD)).to('ft^3/min')
+
+'''
+def scfm_to_acfm(scfm, P, T, gas):
+    R, gamma, S_g, choke = get_constants(gas, T, P)
+
+    reutrn ()
+'''
 
 def scfm_to_mdot(scfm, gas):
     R, gamma, S_g, choke = get_constants(gas, T_STD, P_STD)
@@ -247,6 +256,17 @@ def c_v_flow(Cv, P1, P2, T1, gas):
 
     return q
 
+def upstream_P(c_v, scfm, T, P2, gas):
+        init = P2
+        P1 = 2000 * u('psi')
+        dP = 0
+        while round(abs(P1 + dP - P2), 2) > 1 * u('psi'):
+            dP = valve_dP(c_v, scfm, P1, T, gas)[0]
+            P1 -= (P1 + dP - P2) * 0.01
+            #print(P1)
+
+        return P1
+    
 def valve_dP(c_v, scfm, P0, T, gas):
     R, gamma, S_g, choke = get_constants(gas, T, P0)
     choked = False
@@ -448,6 +468,15 @@ def fanno_flow(T0, P0, T1, P1, M1, L, dia, gas_type):
 
     #print(f"Pressure drop over {L.to('ft'): ~P.2f} long section: {(P02-P0).to('psi'): ~P.2f}")
     return T2.to('kelvin'), P2.to('psi'), T0.to('kelvin'), P02.to('psi'), M2.to('dimensionless'), a.to('ft/s'), v.to('ft/s')  
+
+def run_fanno(T, P, mdot, tube_dia, tube_length, gas):
+    '''
+    Returns: T2, P2, T02, P02, M2, a2, v2
+    '''
+    T1, P1, T01, P01, M1, a1, v1 = isentropic_flow(T, P, mdot, tube_dia, gas)
+    T2, P2, T02, P02, M2, a2, v2 = fanno_flow(T01, P01, T1, P1, M1, tube_length, tube_dia, gas)
+
+    return T2, P2, T02, P02, M2, a2, v2
 
 def vel_ideal_gas(T, P, dia, m_dot, gas_type):
     '''

@@ -1,18 +1,17 @@
 from press_funcs import *
 
-h2_source_press = 1500 * u('psi')
-gox_source_press = 1200 * u('psi')
-gox_regulated_press = 400 * u('psi')
-h2_regulated_press = 400 * u('psi')
+h2_source_press = 1200 * u('psi')
+gox_source_press = 919 * u('psi')
+gox_regulated_press = 750 * u('psi')
+h2_regulated_press = 750 * u('psi')
 T_h2_reg = T_isent_exp(T_STD, h2_source_press, h2_regulated_press, "Hydrogen")
 T_gox_reg = T_isent_exp(T_STD, gox_source_press, gox_regulated_press, "Oxygen")
 T_h2_reg = T_STD
 T_gox_reg = T_STD
-tube_dia = (0.375 - 0.049*2) * u('in')
+tube_dia = (0.25 - 0.035*2) * u('in')
 
-
-mdot_h2 = 6 * u('g/s')
-mdot_gox = 15 * u('g/s')
+mdot_h2 = 5 * u('g/s')
+mdot_gox = 12.5 * u('g/s')
 
 scfm_h2 = mdot_to_scfm(mdot_h2, "Hydrogen")
 scfm_gox = mdot_to_scfm(mdot_gox, "Oxygen")
@@ -44,3 +43,5 @@ print("C_v (gox, fu):  ", f"           {c_v_gox: <.4f},            ", f"{c_v_h2:
 print("Velocity (gox, fu):  ", f"      {v2_gox.to('ft/s'): ~P.4f},       ", f"{v2_h2.to('ft/s'): ~P.4f}")
 #print("Velocity (gox, fu):  ", f"      {vel_gox.to('ft/s'): ~P.4f},       ", f"{vel_h2.to('ft/s'): ~P.4f}")
 print("Mach (gox, fu):  ", f"          {M2_gox.to('dimensionless'): ~P.4f},       ", f"{M2_h2.to('dimensionless'): ~P.4f}")
+
+print(c_v_flow(0.06, 925 * u('psi'), 775 * u('psi'), T_STD, "Nitrogen"))

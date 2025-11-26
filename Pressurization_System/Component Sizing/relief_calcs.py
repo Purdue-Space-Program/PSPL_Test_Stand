@@ -12,7 +12,7 @@ print('------------------------- CONSTANT PRESSURE --------------------------')
 gas = 'Nitrogen'
 reg_cv = 1.3 * u('dimensionless')
 source_P = 6000 * u('psi')
-relief_P = 1329 * u('psi')
+relief_P = 1600 * u('psi')
 amb_P = P_STD
 source_T = T_STD
 
@@ -24,12 +24,12 @@ area, dia = choked_flow_dim(mdot_out, relief_P, t_relief, gas)
 
 # Hydrogen flow exits through a valve from tank MAWP (1500 psi) to atmospheric at room temperature
 c_v_out = c_v(flow_in, relief_P, amb_P, t_relief, gas) * u('dimensionless')
-print(f"SCFM in: {flow_in: ~P.4f}, Required Cv out: {c_v_out: ~P.4f}, Required mdot out: {mdot_out: ~P.4f}, Required diameter out: {dia: ~P.4f}")
+print(f"SCFM in: {flow_in: ~P.4f}, Required Cv out: {c_v_out: ~P.4f}, Required mdot out: {mdot_out.to('lb/s'): ~P.4f}, Required dia out: {dia: ~P.4f}, Required area out: {area: ~P.4f}")
 print(f"Relief temp: {t_relief: ~P.4f}, {amb_P: ~P.4f}")
 
 '''
 # -------------------- VARIABLE PRESSURE WITH MASS FLOW ---------------------
-tank_P = 1329 * u('psi')
+tank_P = 1470 * u('psi')
 print('------------------------- VARIABLE PRESSURE --------------------------')
 gas = 'Nitrogen'
 total_mdot = 0.1 * u('lb/s')
@@ -44,9 +44,10 @@ while abs(total_mdot.to('lb/s').m - regflow.to('lb/s').m) > 0.00001:
 
     #print(total_mdot)
     source = (5042*np.exp(-0.1505*total_mdot.to('lb/s').m) + -92.31*np.exp(2.358*total_mdot.to('lb/s').m)) * u('psi')
+    
     flow_in = c_v_flow(1.3 * u('dimensionless'), source, tank_P, 288 * u('kelvin'), gas)
     regflow = scfm_to_mdot(flow_in, "Nitrogen")
-    #print(source)
+    print(source)
 
 t_tank = T_STD
 mdot_out = scfm_to_mdot(flow_in, gas)
@@ -54,8 +55,6 @@ area, dia = choked_flow_dim(mdot_out, tank_P, t_tank, gas)
 
 # Hydrogen flow exits through a valve from tank MAWP (1500 psi) to atmospheric at room temperature
 c_v_out = c_v(flow_in, tank_P, 14.7 * u('psi'), t_tank, gas) * u('dimensionless')
-
-
 
 print(f"SCFM in: {flow_in: ~P.4f}, Required Cv out: {c_v_out: ~P.4f}, Required mdot out: {mdot_out.to('lb/s'): ~P.4f}, Required diameter out: {dia: ~P.4f}, area: {area: ~P.4f}")
 print(f"Gas temp in tank: {t_tank: ~P.4f}")

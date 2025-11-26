@@ -61,17 +61,17 @@ N2 = 22.67 # [-], swage constant
 
 # GOx
 oxidizer = "Oxygen"
-GOx_massFlow = 22 * (u.grams / u.second) # [g/s], requirement: GOx mass flow
+GOx_massFlow = 12.5 * (u.grams / u.second) # [g/s], requirement: GOx mass flow
 GOx_regulatorCv = 0.06 * (u.dimensionless) # [unitless], GOx regulator Cv
-GOx_targetPressure = 1000 * (u.lbf / (u.inch ** 2)) # [lbf/in^2], requirement
+GOx_targetPressure = 750 * (u.lbf / (u.inch ** 2)) # [lbf/in^2], requirement
 GOx_standardR = 259.84 * ((u.joule) / (u.kilogram * u.kelvin)) # [J/kgK]; assumes ideal gas and standard conditions
 GOx_temperature = 280 * (u.kelvin) # [K], estimate
 
 # H2
 fuel = "Hydrogen"
-H2_massFlow = 22 * (u.grams / u.second) # [g/s], requirement: GOx mass flow
-H2_regulatorCv = 0.12 * (u.dimensionless) # [unitless], H2 regulator Cv
-H2_targetPressure = 1000 * (u.lbf / (u.inch ** 2)) # [lbf/in^2], requirement
+H2_massFlow = 5 * (u.grams / u.second) # [g/s], requirement: GOx mass flow
+H2_regulatorCv = 0.06 * (u.dimensionless) # [unitless], H2 regulator Cv
+H2_targetPressure = 750 * (u.lbf / (u.inch ** 2)) # [lbf/in^2], requirement
 H2_standardR = 4124.2 * ((u.joule) / (u.kilogram * u.kelvin)) # [J/kgK]; assumes ideal gas and standard conditions
 H2_temperature = 280 * (u.kelvin) # [K], estimate
 

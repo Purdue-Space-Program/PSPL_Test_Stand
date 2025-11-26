@@ -63,7 +63,7 @@ def run_test(combined=False):
 
         P_source_lox = source
         P_source_fu = source
-        tube_dia = (0.5 - 2*0.083) * u("in")
+        tube_dia = (0.75 - 2*0.083) * u("in")
 
         # Leave these
         T_SOURCE = T_STD
@@ -163,7 +163,6 @@ def run_test(combined=False):
             vdot_lox = prop_vol_flow(OX, MDOT_LOX, P_FILL)
             scfm_lox = acfm_to_scfm(vdot_lox, P_TANK_LOX, T_TANK_LOX)
             mdot_gas_lox = acfm_to_mdot(vdot_lox, P_TANK_LOX, T_TANK_LOX, GAS_TYPE_LOX)
-            mdot_gas_fu = acfm_to_mdot(vdot_fu, P_TANK_LOX, T_TANK_FU, GAS_TYPE_LOX)
             throat_area_lox, throat_dia_lox = choked_flow_dim(mdot_gas_lox, P_source_lox, T_SOURCE, GAS_TYPE_LOX)
             Cv_lox = c_v(scfm_lox, P_source_lox, P_TANK_LOX, T_SOURCE, GAS_TYPE_LOX)
 

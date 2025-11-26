@@ -1,7 +1,17 @@
 from math import *
-from press_funcs import *
-from reg_sizing import *
+from pint import UnitRegistry
+#from reg_sizing import *
 
+u = UnitRegistry()
+Q_ = u.Quantity
+
+P_MAWP = 1055 * u('psi')
+V_TANK = 3 * u('ft^3')
+P_BOTTLE = 6000 * u('psi')
+T_STD = Q_(60, 'degF').to('kelvin')  # Standard temperature
+GAMMA_N2 = 1.4
+Tsat_lox = 90.18780788045103 * u('kelvin')
+V_BOTTLE = 43.3 * u('L')
 # Bottles
 # Constant Temp
 V_1_isothermal = (P_MAWP * V_TANK / P_BOTTLE)
@@ -12,9 +22,10 @@ V_1_isentropic = V_TANK * (P_MAWP / P_BOTTLE)**(1 / GAMMA_N2)
 # Lox Temp
 V_1_loxtemp = ((P_MAWP * V_TANK * T_STD) / (Tsat_lox)) / P_BOTTLE
 
-num_isothermal = 2 * V_1_isothermal / V_BOTTLE
-num_isentropic = 2 * V_1_isentropic / V_BOTTLE
-num_loxtemp = 2 * V_1_loxtemp / V_BOTTLE
+bottle_utilized = 1 - P_MAWP / P_BOTTLE 
+num_isothermal = 2 * V_1_isothermal / V_BOTTLE / bottle_utilized
+num_isentropic = 2 * V_1_isentropic / V_BOTTLE / bottle_utilized
+num_loxtemp = 2 * V_1_loxtemp / V_BOTTLE / bottle_utilized
 
 print("Initial V required: ")
 print("Isothermal: ", V_1_isothermal)
